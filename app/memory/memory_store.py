@@ -15,11 +15,11 @@ class MemoryStore:
     def __init__(self):
         if self._initialized:
             return
-        from app.database import SQLiteDatabase
         self._short_term: dict = {}
         self._long_term: list = []
-        self._db = SQLiteDatabase()
-        for key, value in self._db.get_all_memory().items():
+        from app.database import SQLiteDatabase
+        db = SQLiteDatabase()
+        for key, value in db.get_all_memory().items():
             self._short_term[key] = {
                 "value": value,
                 "timestamp": datetime.now().isoformat(),
@@ -29,7 +29,9 @@ class MemoryStore:
 
     def write(self, key: str, value: Any, long_term: bool = False):
         self._short_term[key] = {"value": value, "timestamp": datetime.now().isoformat()}
-        self._db.save_memory(key, str(value))
+        from app.database import SQLiteDatabase
+        db = SQLiteDatabase()
+        db.save_memory(key, str(value))
         if long_term:
             words = set(str(value).lower().split())
             for entry in self._long_term:
@@ -45,7 +47,9 @@ class MemoryStore:
         entry = self._short_term.get(key)
         if entry:
             return entry["value"]
-        stored = self._db.get_memory(key)
+        from app.database import SQLiteDatabase
+        db = SQLiteDatabase()
+        stored = db.get_memory(key)
         if stored is not None:
             self._short_term[key] = {
                 "value": stored,
@@ -69,7 +73,9 @@ class MemoryStore:
         return [v for _, v in scored[:top_k]]
 
     def get_all(self) -> dict:
-        merged = self._db.get_all_memory()
+        from app.database import SQLiteDatabase
+        db = SQLiteDatabase()
+        merged = db.get_all_memory()
         merged.update({k: v["value"] for k, v in self._short_term.items()})
         return merged
 

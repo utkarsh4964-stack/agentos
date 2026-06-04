@@ -151,7 +151,9 @@ class Orchestrator:
         task.final_result = previous_result
         task.status = TaskStatus.DONE
         task.completed_at = datetime.now().isoformat()
-        self._db.save_task(task)
+        from app.database import SQLiteDatabase
+        db = SQLiteDatabase()
+        db.save_task(task)
         self._emit(f"✅ Task [{task.id}] COMPLETE")
         return task
 
@@ -201,15 +203,9 @@ class Orchestrator:
         return self._task_to_status(task)
 
     def get_all_tasks(self) -> List[dict]:
-        seen = set()
-        statuses = []
-        for task in self._db.get_all_tasks():
-            seen.add(task.id)
-            statuses.append(self._task_to_status(task))
-        for tid, task in self._tasks.items():
-            if tid not in seen:
-                statuses.append(self._task_to_status(task))
-        return statuses
+        from app.database import SQLiteDatabase
+        db = SQLiteDatabase()
+        return [self._task_to_status(task) for task in db.get_all_tasks()]
 
     def get_live_updates(self) -> List[dict]:
         return self._live_updates[-50:]  # last 50 updates
