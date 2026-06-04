@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentOS — AI Agent Operating System</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0D0B1E; --card: #14112A; --border: #2A2550;
+    --accent: #6C47FF; --teal: #00C4A1; --orange: #FF6B35;
+    --text: #E8E4FF; --muted: #8B85B0; --green: #22C55E;
+    --red: #EF4444; --yellow: #F59E0B;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+  header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 22px; color: white; }
+  header span { font-size: 12px; background: var(--accent); color: white; padding: 3px 10px; border-radius: 20px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; margin-left: auto; }
+  .status-label { font-size: 12px; color: var(--green); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .main { display: grid; grid-template-columns: 1fr 320px; gap: 0; height: calc(100vh - 57px); }
+  .left { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+  .right { background: var(--card); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .card-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+  /* Goal input */
+  .goal-input { display: flex; gap: 10px; }
+  .goal-input input {
+    flex: 1; background: #1E1940; border: 1px solid var(--border);
+    color: var(--text); padding: 12px 16px; border-radius: 8px; font-size: 14px; outline: none;
+  }
+  .goal-input input:focus { border-color: var(--accent); }
+  .goal-input button {
+    background: var(--accent); color: white; border: none;
+    padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; white-space: nowrap; transition: opacity .2s;
+  }
+  .goal-input button:hover { opacity: .85; }
+  .goal-input button:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* Agent cards */
+  .agents-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .agent-card {
+    background: #1A1535; border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; text-align: center; transition: all .3s;
+  }
+  .agent-card.working { border-color: var(--accent); background: #1E1645; }
+  .agent-card.done { border-color: var(--green); }
+  .agent-card.failed { border-color: var(--red); }
+  .agent-icon { font-size: 24px; margin-bottom: 6px; }
+  .agent-name { font-size: 11px; font-weight: 700; color: var(--text); }
+  .agent-status { font-size: 10px; margin-top: 4px; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+  .status-idle { background: #2A2550; color: var(--muted); }
+  .status-working { background: #2D1F6E; color: #A78BFA; animation: pulse 1s infinite; }
+  .status-done { background: #14532D; color: var(--green); }
+  .status-failed { background: #7F1D1D; color: var(--red); }
+
+  /* Result */
+  .result-box {
+    background: #0A0918; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.7;
+    white-space: pre-wrap; min-height: 80px; color: #C4B8FF;
+    max-height: 300px; overflow-y: auto;
+  }
+  .result-box.empty { color: var(--muted); font-style: italic; }
+
+  /* Task history */
+  .task-item { background: #1A1535; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+  .task-item .task-goal { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .task-item .task-meta { font-size: 10px; color: var(--muted); }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .badge-done { background: #14532D; color: var(--green); }
+  .badge-running { background: #2D1F6E; color: #A78BFA; }
+  .badge-failed { background: #7F1D1D; color: var(--red); }
+
+  /* Live feed */
+  .feed-item { font-size: 11px; padding: 6px 0; border-bottom: 1px solid #1E1940; color: var(--muted); line-height: 1.4; }
+  .feed-item span { color: var(--teal); font-weight: 700; }
+  #feed { max-height: 220px; overflow-y: auto; }
+
+  /* Memory */
+  .mem-item { font-size: 11px; padding: 5px 8px; background: #1A1535; border-radius: 5px; margin-bottom: 5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: #1A1535; border-radius: 6px; padding: 10px; text-align: center; }
+  .stat-val { font-size: 20px; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* Progress bar */
+  .progress-wrap { background: #1A1535; border-radius: 4px; height: 4px; margin-top: 8px; }
+  .progress-bar { height: 4px; border-radius: 4px; background: var(--accent); transition: width .5s; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span>🤖</span>
+  <h1>AgentOS</h1>
+  <span>v1.0</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+    <div class="status-dot" id="connDot"></div>
+    <span class="status-label" id="connLabel">Connecting...</span>
+  </div>
+</header>
+
+<div class="main">
+  <div class="left">
+
+    <!-- Goal input -->
+    <div class="card">
+      <div class="card-title">Submit a Goal to AgentOS</div>
+      <div class="goal-input">
+        <input id="goalInput" type="text" placeholder="e.g. Write a research report on Artificial Intelligence" />
+        <button id="runBtn" onclick="submitGoal()">▶ Run Agents</button>
+      </div>
+      <div class="progress-wrap" style="margin-top:10px">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px" id="progressLabel"></div>
+    </div>
+
+    <!-- Agent status -->
+    <div class="card">
+      <div class="card-title">Agents</div>
+      <div class="agents-grid" id="agentsGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="card" style="flex:1">
+      <div class="card-title">Final Output</div>
+      <div class="result-box empty" id="resultBox">
+        Submit a goal above to see agents work together in real time...
+      </div>
+    </div>
+
+  </div>
+
+  <div class="right">
+
+    <!-- Stats -->
+    <div>
+      <div class="card-title">Stats</div>
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="statTasks">0</div><div class="stat-label">Tasks Run</div></div>
+        <div class="stat"><div class="stat-val" id="statCalls">0</div><div class="stat-label">API Calls</div></div>
+        <div class="stat"><div class="stat-val" id="statMsgs">0</div><div class="stat-label">Messages</div></div>
+        <div class="stat"><div class="stat-val" id="statCost">$0</div><div class="stat-label">Cost</div></div>
+      </div>
+    </div>
+
+    <!-- Live feed -->
+    <div>
+      <div class="card-title">Live Feed</div>
+      <div id="feed"></div>
+    </div>
+
+    <!-- Task history -->
+    <div>
+      <div class="card-title">Task History</div>
+      <div id="taskHistory"></div>
+    </div>
+
+    <!-- Memory -->
+    <div>
+      <div class="card-title">Shared Memory</div>
+      <div id="memoryView"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:8000";
+const agentIcons = {
+  PlannerAgent: "🧠", ResearchAgent: "🔍",
+  WriterAgent: "✍️", FactCheckerAgent: "🔎", EditorAgent: "🎨"
+};
+let ws, taskCount = 0;
+
+// ── Init ──────────────────────────────────────────────────────
+window.onload = () => {
+  loadAgents();
+  connectWS();
+  setInterval(refreshStats, 3000);
+  setInterval(loadMemory, 5000);
+  setInterval(loadTasks, 4000);
+};
+
+// ── WebSocket ─────────────────────────────────────────────────
+function connectWS() {
+  try {
+    ws = new WebSocket(`ws://localhost:8000/ws/live`);
+    ws.onopen = () => setConnected(true);
+    ws.onclose = () => { setConnected(false); setTimeout(connectWS, 3000); };
+    ws.onerror = () => setConnected(false);
+    ws.onmessage = e => {
+      const data = JSON.parse(e.data);
+      if (data.type === "update") addFeedItem(data.message);
+    };
+  } catch(e) { setConnected(false); }
+}
+
+function setConnected(ok) {
+  document.getElementById("connDot").style.background = ok ? "var(--green)" : "var(--red)";
+  document.getElementById("connLabel").textContent = ok ? "Live" : "Offline";
+  document.getElementById("connLabel").style.color = ok ? "var(--green)" : "var(--red)";
+}
+
+// ── Load agents ───────────────────────────────────────────────
+async function loadAgents() {
+  try {
+    const r = await fetch(`${API}/agents`);
+    const data = await r.json();
+    renderAgents(data.agents || []);
+  } catch(e) {
+    // Show default agents if API not running
+    renderAgents([
+      {name:"PlannerAgent", status:"idle"}, {name:"ResearchAgent", status:"idle"},
+      {name:"WriterAgent", status:"idle"}, {name:"FactCheckerAgent", status:"idle"},
+      {name:"EditorAgent", status:"idle"}
+    ]);
+  }
+}
+
+function renderAgents(agents) {
+  const grid = document.getElementById("agentsGrid");
+  grid.innerHTML = agents.map(a => `
+    <div class="agent-card ${a.status}" id="agent-${a.name}">
+      <div class="agent-icon">${agentIcons[a.name] || "🤖"}</div>
+      <div class="agent-name">${a.name.replace("Agent","")}</div>
+      <div class="agent-status status-${a.status}">${a.status}</div>
+    </div>
+  `).join("");
+}
+
+function setAgentStatus(name, status) {
+  const el = document.getElementById(`agent-${name}`);
+  if (!el) return;
+  el.className = `agent-card ${status}`;
+  el.querySelector(".agent-status").className = `agent-status status-${status}`;
+  el.querySelector(".agent-status").textContent = status;
+}
+
+// ── Submit goal ───────────────────────────────────────────────
+async function submitGoal() {
+  const goal = document.getElementById("goalInput").value.trim();
+  if (!goal) return;
+
+  const btn = document.getElementById("runBtn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Running...";
+  document.getElementById("resultBox").className = "result-box empty";
+  document.getElementById("resultBox").textContent = "Agents are working...";
+  setProgress(10, "Planning...");
+  addFeedItem(`🚀 New goal: ${goal}`);
+
+  // Animate agents as working
+  const agentOrder = ["PlannerAgent","ResearchAgent","WriterAgent","FactCheckerAgent","EditorAgent"];
+  let delay = 0;
+  agentOrder.forEach((name, i) => {
+    setTimeout(() => setAgentStatus(name, "working"), delay);
+    delay += 800;
+  });
+
+  try {
+    setProgress(20, "Submitting to AgentOS...");
+    const r = await fetch(`${API}/tasks/submit`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({goal})
+    });
+
+    if (!r.ok) throw new Error("API error");
+    const data = await r.json();
+    setProgress(100, "Complete!");
+
+    // Mark all agents done
+    agentOrder.forEach(name => setAgentStatus(name, "done"));
+
+    // Show result
+    const resultEl = document.getElementById("resultBox");
+    resultEl.className = "result-box";
+    resultEl.textContent = data.result_preview || "Task completed successfully.";
+
+    addFeedItem(`✅ Task complete — ${data.agents_used} agents used`);
+    taskCount++;
+    document.getElementById("statTasks").textContent = taskCount;
+    loadTasks();
+
+  } catch(e) {
+    // Demo mode — show fake result
+    setProgress(100, "Demo complete!");
+    agentOrder.forEach(name => setAgentStatus(name, "done"));
+
+    const demoResult = `Artificial Intelligence: Reshaping Our World
+
+AI has emerged as the defining technology of the 21st century. Investment has surged 300% since 2020, reflecting a fundamental shift in how businesses and governments view the technology.
+
+Large language models now exceed human performance on many academic benchmarks. The global AI market is projected to reach $1.8 trillion by 2030.
+
+Industries from healthcare to finance are being redesigned around AI capabilities. Yet questions of bias, privacy, and job displacement demand urgent policy responses.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Researched by ResearchAgent
+✓ Written by WriterAgent  
+✓ Verified by FactCheckerAgent
+✓ Edited by EditorAgent
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Demo mode — start server for real AI output]`;
+
+    document.getElementById("resultBox").className = "result-box";
+    document.getElementById("resultBox").textContent = demoResult;
+    addFeedItem("✅ Demo task complete — 5 agents collaborated");
+    taskCount++;
+    document.getElementById("statTasks").textContent = taskCount;
+  }
+
+  btn.disabled = false;
+  btn.textContent = "▶ Run Agents";
+  setTimeout(() => agentOrder.forEach(name => setAgentStatus(name, "idle")), 3000);
+}
+
+// ── Live feed ─────────────────────────────────────────────────
+function addFeedItem(msg) {
+  const feed = document.getElementById("feed");
+  const item = document.createElement("div");
+  item.className = "feed-item";
+  const time = new Date().toLocaleTimeString();
+  item.innerHTML = `<span>${time}</span> ${msg}`;
+  feed.insertBefore(item, feed.firstChild);
+  if (feed.children.length > 30) feed.removeChild(feed.lastChild);
+}
+
+// ── Progress ──────────────────────────────────────────────────
+function setProgress(pct, label) {
+  document.getElementById("progressBar").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent = label;
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+async function refreshStats() {
+  try {
+    const r = await fetch(`${API}/resources/usage`);
+    const data = await r.json();
+    document.getElementById("statCalls").textContent = data.total_calls || 0;
+    document.getElementById("statCost").textContent = "$" + (data.total_cost_usd || 0).toFixed(4);
+    const mr = await fetch(`${API}/messages`);
+    const md = await mr.json();
+    document.getElementById("statMsgs").textContent = (md.messages || []).length;
+  } catch(e) {}
+}
+
+// ── Task history ──────────────────────────────────────────────
+async function loadTasks() {
+  try {
+    const r = await fetch(`${API}/tasks`);
+    const data = await r.json();
+    const tasks = data.tasks || [];
+    const el = document.getElementById("taskHistory");
+    if (!tasks.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">No tasks yet</div>'; return; }
+    el.innerHTML = tasks.slice(-5).reverse().map(t => `
+      <div class="task-item">
+        <div class="task-goal">${t.goal}</div>
+        <div class="task-meta">
+          <span class="badge badge-${t.status === 'DONE' ? 'done' : t.status === 'FAILED' ? 'failed' : 'running'}">
+            ${t.status}
+          </span>
+          &nbsp;${t.subtasks?.length || 0} agents
+        </div>
+      </div>
+    `).join("");
+  } catch(e) {}
+}
+
+// ── Memory ────────────────────────────────────────────────────
+async function loadMemory() {
+  try {
+    const r = await fetch(`${API}/memory/all`);
+    const data = await r.json();
+    const mem = data.memory || {};
+    const el = document.getElementById("memoryView");
+    const keys = Object.keys(mem);
+    if (!keys.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Memory empty</div>'; return; }
+    el.innerHTML = keys.slice(-6).map(k => `
+      <div class="mem-item" title="${String(mem[k]).substring(0,200)}">
+        <b>${k}</b>: ${String(mem[k]).substring(0,50)}...
+      </div>
+    `).join("");
+  } catch(e) {}
+}
+
+// Enter key to submit
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("goalInput")?.addEventListener("keypress", e => {
+    if (e.key === "Enter") submitGoal();
+  });
+});
+</script>
+</body>
+</html>
