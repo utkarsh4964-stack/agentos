@@ -46,8 +46,10 @@ class Orchestrator:
     def __init__(self):
         if self._initialized:
             return
+        from app.database import SQLiteDatabase
         self._tasks: Dict[str, Task] = {}
         self._live_updates = []
+        self._db = SQLiteDatabase()
         self._initialized = True
         print("[Orchestrator] Initialized")
 
@@ -103,11 +105,13 @@ class Orchestrator:
         task = Task(id=str(uuid.uuid4())[:8], goal=goal)
         self._tasks[task.id] = task
         task.status = TaskStatus.IN_PROGRESS
+        self._db.save_task(task)
         self._emit(f"🚀 Starting task [{task.id}]: {goal}")
 
         # Plan
         subtasks = self.plan(goal)
         task.subtasks = subtasks
+        self._db.save_task(task)
 
         from app.agents.registry import AgentRegistry
         registry = AgentRegistry()
@@ -126,6 +130,7 @@ class Orchestrator:
             agent = registry.get(subtask.assigned_to)
             if not agent:
                 subtask.status = TaskStatus.FAILED
+                self._db.save_task(task)
                 continue
 
             # Pass previous result as context
@@ -139,12 +144,14 @@ class Orchestrator:
             subtask.status = TaskStatus.DONE
             subtask.completed_at = datetime.now().isoformat()
             previous_result = result
+            self._db.save_task(task)
             self._emit(f"✓ [{subtask.assigned_to}] Done")
 
         # Final result is the last agent's output
         task.final_result = previous_result
         task.status = TaskStatus.DONE
         task.completed_at = datetime.now().isoformat()
+        self._db.save_task(task)
         self._emit(f"✅ Task [{task.id}] COMPLETE")
         return task
 
@@ -164,11 +171,7 @@ class Orchestrator:
         backup = AgentRegistry().get("ResearchAgent")
         return backup.run(task) if backup else "Task could not be completed."
 
-    def get_status(self, task_id: str) -> Optional[dict]:
-        """Get current status of a task."""
-        task = self._tasks.get(task_id)
-        if not task:
-            return None
+    def _task_to_status(self, task: Task) -> dict:
         return {
             "id": task.id,
             "goal": task.goal,
@@ -188,8 +191,25 @@ class Orchestrator:
             "completed_at": task.completed_at
         }
 
+    def get_status(self, task_id: str) -> Optional[dict]:
+        """Get current status of a task."""
+        task = self._tasks.get(task_id)
+        if not task:
+            task = self._db.get_task(task_id)
+        if not task:
+            return None
+        return self._task_to_status(task)
+
     def get_all_tasks(self) -> List[dict]:
-        return [self.get_status(tid) for tid in self._tasks]
+        seen = set()
+        statuses = []
+        for task in self._db.get_all_tasks():
+            seen.add(task.id)
+            statuses.append(self._task_to_status(task))
+        for tid, task in self._tasks.items():
+            if tid not in seen:
+                statuses.append(self._task_to_status(task))
+        return statuses
 
     def get_live_updates(self) -> List[dict]:
         return self._live_updates[-50:]  # last 50 updates
