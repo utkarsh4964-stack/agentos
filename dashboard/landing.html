@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentOS — The Operating System for AI Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0A0918;
+    --bg-elevated: #14112A;
+    --card: #1A1535;
+    --border: #2A2550;
+    --accent: #6C47FF;
+    --accent-glow: rgba(108, 71, 255, 0.35);
+    --teal: #00C4A1;
+    --teal-glow: rgba(0, 196, 161, 0.25);
+    --text: #E8E4FF;
+    --muted: #8B85B0;
+    --white: #FFFFFF;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-glow), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 50%, var(--teal-glow), transparent),
+      radial-gradient(ellipse 50% 30% at 0% 80%, rgba(108, 71, 255, 0.12), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ── Header ── */
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 5%;
+    background: rgba(10, 9, 24, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  header.scrolled {
+    border-bottom-color: var(--border);
+    background: rgba(10, 9, 24, 0.95);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--white);
+  }
+
+  .logo span:first-child { font-size: 1.5rem; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  nav a {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--text); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    font-family: inherit;
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #8B6FFF);
+    color: var(--white);
+    box-shadow: 0 4px 24px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 8px 32px var(--accent-glow);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--white);
+  }
+
+  .btn-teal {
+    background: linear-gradient(135deg, var(--teal), #00E5BB);
+    color: var(--bg);
+  }
+
+  .btn-outline-teal {
+    background: transparent;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+  }
+
+  .btn-outline-teal:hover {
+    background: rgba(0, 196, 161, 0.1);
+  }
+
+  .nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 5% 80px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    color: var(--teal);
+    font-weight: 600;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--teal);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--white);
+    max-width: 900px;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero h1 .gradient {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--teal) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero .sub {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: var(--muted);
+    max-width: 640px;
+    margin-bottom: 40px;
+    line-height: 1.7;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--muted);
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .hero-stats .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-stats .dot {
+    color: var(--teal);
+    animation: blink 1.5s infinite;
+  }
+
+  .hero-stats .highlight {
+    color: var(--teal);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── Sections ── */
+  section {
+    padding: 100px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--teal);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .section-title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    color: var(--white);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    text-align: center;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto 56px;
+    font-size: 1.05rem;
+  }
+
+  /* ── How it works ── */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+
+  .step {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  }
+
+  .step:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .step-num {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, var(--accent), #8B6FFF);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .step h3 {
+    font-size: 1.15rem;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .step p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── Features ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    transition: all 0.3s;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(0, 196, 161, 0.4);
+    box-shadow: 0 0 40px var(--teal-glow);
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 16px;
+  }
+
+  .feature-card h3 {
+    font-size: 1.2rem;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .feature-card p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* ── Pricing ── */
+  #pricing { max-width: 1100px; }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .price-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 28px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s;
+  }
+
+  .price-card.featured {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, #1E1645 0%, var(--bg-elevated) 100%);
+    box-shadow: 0 0 60px var(--accent-glow);
+    transform: scale(1.03);
+    position: relative;
+  }
+
+  .price-card.featured::before {
+    content: 'Most Popular';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+  }
+
+  .price-tier {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .price-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .price-amount span {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .price-features {
+    list-style: none;
+    margin: 28px 0;
+    flex: 1;
+  }
+
+  .price-features li {
+    font-size: 0.9rem;
+    color: var(--muted);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .price-features li::before {
+    content: '✓';
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  .price-card .btn { width: 100%; margin-top: auto; }
+
+  /* ── Demo terminal ── */
+  .demo-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 100px 5%;
+  }
+
+  .terminal {
+    background: #05040F;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  }
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .terminal-dot.red { background: #EF4444; }
+  .terminal-dot.yellow { background: #F59E0B; }
+  .terminal-dot.green { background: #22C55E; }
+
+  .terminal-title {
+    margin-left: 12px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .terminal-body {
+    padding: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    min-height: 280px;
+  }
+
+  .terminal-line {
+    margin-bottom: 6px;
+    opacity: 0;
+    animation: lineIn 0.4s ease forwards;
+  }
+
+  .terminal-line.visible { opacity: 1; }
+
+  .t-prompt { color: var(--teal); }
+  .t-agent { color: var(--accent); font-weight: 500; }
+  .t-system { color: var(--muted); }
+  .t-success { color: #22C55E; }
+  .t-goal { color: #C4B8FF; }
+  .t-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--teal);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: cursorBlink 1s step-end infinite;
+  }
+
+  @keyframes lineIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes cursorBlink {
+    50% { opacity: 0; }
+  }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 5%;
+    text-align: center;
+    background: rgba(20, 17, 42, 0.5);
+  }
+
+  footer .tagline {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  footer .tagline em {
+    color: var(--text);
+    font-style: normal;
+  }
+
+  footer .links {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  footer .links a {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--teal);
+    transition: color 0.2s;
+  }
+
+  footer .links a:hover { color: var(--white); }
+
+  footer .copy {
+    margin-top: 24px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .steps,
+    .features-grid,
+    .pricing-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .price-card.featured {
+      transform: none;
+      order: -1;
+    }
+
+    nav { display: none; }
+    nav.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--bg-elevated);
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      gap: 20px;
+    }
+
+    .nav-toggle { display: block; }
+    .header-cta { display: none; }
+    nav.open + .header-cta,
+    .header-actions.open .header-cta {
+      display: flex;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hero-buttons { flex-direction: column; width: 100%; max-width: 280px; }
+    .hero-buttons .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header id="header">
+    <a href="#" class="logo">
+      <span>🤖</span>
+      <span>AgentOS</span>
+    </a>
+    <div class="header-actions" id="headerActions">
+      <nav id="nav">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="http://localhost:8000/docs" target="_blank" rel="noopener">Docs</a>
+        <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+      <a href="index.html" class="btn btn-primary header-cta">Get Started Free</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">Now in public beta</div>
+    <h1>The Operating System for <span class="gradient">AI Agents</span></h1>
+    <p class="sub">
+      Let multiple AI agents collaborate, share memory, and work as a team to complete any goal.
+      Built for developers. Powered by LLMs.
+    </p>
+    <div class="hero-buttons">
+      <a href="index.html" class="btn btn-primary">Try Free</a>
+      <a href="http://localhost:8000/docs" class="btn btn-secondary" target="_blank" rel="noopener">View Docs</a>
+    </div>
+    <div class="hero-stats" id="heroStats">
+      <span class="stat-item"><span class="highlight">5</span> Agents</span>
+      <span class="dot">•</span>
+      <span class="stat-item"><span class="highlight">Real-time</span></span>
+      <span class="dot">•</span>
+      <span class="stat-item"><span class="highlight">Zero Setup</span></span>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how">
+    <p class="section-label">How it works</p>
+    <h2 class="section-title">From goal to result in three steps</h2>
+    <p class="section-desc">No complex workflows. Just describe what you want and let AgentOS handle the rest.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">🎯</div>
+        <h3>Submit a Goal</h3>
+        <p>Type any goal in plain English. Research reports, summaries, analysis — anything.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">🤖</div>
+        <h3>Agents Collaborate</h3>
+        <p>5 specialized agents — Planner, Research, Writer, Fact-checker, and Editor — work together.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">✅</div>
+        <h3>Get Results</h3>
+        <p>Polished output in seconds. Every step tracked, every result saved to shared memory.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <p class="section-label">Features</p>
+    <h2 class="section-title">Built for agent teams</h2>
+    <p class="section-desc">Everything you need to run multi-agent workflows without building infrastructure from scratch.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>Shared Memory</h3>
+        <p>Agents remember everything. Short-term context and long-term knowledge persist across tasks and restarts.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>Task Orchestration</h3>
+        <p>Automatic task breakdown and assignment. The orchestrator plans, delegates, and retries until the job is done.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Real-time Updates</h3>
+        <p>Watch agents work live on the dashboard. See planning, execution, and completion as it happens.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing">
+    <p class="section-label">Pricing</p>
+    <h2 class="section-title">Simple, transparent plans</h2>
+    <p class="section-desc">Start free. Scale when your agents need more power.</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-tier">Free</div>
+        <div class="price-amount">Rs 0 <span>/month</span></div>
+        <ul class="price-features">
+          <li>5 tasks/day</li>
+          <li>3 agents</li>
+          <li>Basic memory</li>
+        </ul>
+        <a href="index.html" class="btn btn-secondary">Get Started</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">Rs 499 <span>/month</span></div>
+        <ul class="price-features">
+          <li>Unlimited tasks</li>
+          <li>All 5 agents</li>
+          <li>Full memory</li>
+          <li>Priority speed</li>
+        </ul>
+        <a href="index.html" class="btn btn-primary">Upgrade to Pro</a>
+      </div>
+      <div class="price-card">
+        <div class="price-tier">Team</div>
+        <div class="price-amount">Rs 1999 <span>/month</span></div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>10 team members</li>
+          <li>API access</li>
+        </ul>
+        <a href="mailto:hello@agentos.dev" class="btn btn-outline-teal">Contact Us</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo -->
+  <div class="demo-section" id="demo">
+    <p class="section-label">Live demo</p>
+    <h2 class="section-title">See agents in action</h2>
+    <p class="section-desc" style="margin-bottom: 40px;">A real orchestration run — from goal to finished report.</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">agentos — orchestrator</span>
+      </div>
+      <div class="terminal-body" id="terminalBody">
+        <div class="terminal-line visible"><span class="t-prompt">$</span> <span class="t-goal">goal "Write a report on renewable energy in India"</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p class="tagline">Built from a <em>college dorm</em> — shipping the future of multi-agent AI.</p>
+    <div class="links">
+      <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      <a href="http://localhost:8000/docs" target="_blank" rel="noopener">API Docs</a>
+    </div>
+    <p class="copy">© 2026 AgentOS. All rights reserved.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  // Header scroll effect
+  const header = document.getElementById('header');
+  window.addEventListener('scroll', function () {
+    header.classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // Mobile nav
+  const navToggle = document.getElementById('navToggle');
+  const nav = document.getElementById('nav');
+  const headerActions = document.getElementById('headerActions');
+  if (navToggle) {
+    navToggle.addEventListener('click', function () {
+      nav.classList.toggle('open');
+      headerActions.classList.toggle('open');
+    });
+  }
+
+  // Animated hero stats cycle
+  const statsEl = document.getElementById('heroStats');
+  const statSets = [
+    ['<span class="highlight">5</span> Agents', 'Real-time', 'Zero Setup'],
+    ['<span class="highlight">∞</span> Goals', 'Shared Memory', 'SQLite-backed'],
+    ['<span class="highlight">1</span> API', 'FastAPI', 'Open Source']
+  ];
+  let statIdx = 0;
+  setInterval(function () {
+    statIdx = (statIdx + 1) % statSets.length;
+    const parts = statSets[statIdx];
+    statsEl.innerHTML = parts.map(function (p, i) {
+      const isHighlight = p.includes('highlight');
+      const cls = isHighlight ? 'stat-item' : 'stat-item';
+      const sep = i < parts.length - 1 ? '<span class="dot">•</span>' : '';
+      const content = isHighlight ? p : '<span class="highlight">' + p + '</span>';
+      return (i > 0 ? sep : '') + '<span class="' + cls + '">' + content + '</span>';
+    }).join('');
+  }, 4000);
+
+  // Terminal demo animation
+  const lines = [
+    { html: '<span class="t-system">[Orchestrator]</span> Planning: Write a report on renewable energy in India', delay: 800 },
+    { html: '<span class="t-agent">PlannerAgent</span> → 4 subtasks created', delay: 1200 },
+    { html: '<span class="t-agent">ResearchAgent</span> ▶ Gathering key facts on solar, wind, hydro...', delay: 1400 },
+    { html: '<span class="t-agent">ResearchAgent</span> <span class="t-success">✓ Done</span>', delay: 1000 },
+    { html: '<span class="t-agent">WriterAgent</span> ▶ Drafting comprehensive report...', delay: 1300 },
+    { html: '<span class="t-agent">WriterAgent</span> <span class="t-success">✓ Done</span>', delay: 900 },
+    { html: '<span class="t-agent">FactCheckerAgent</span> ▶ Verifying claims...', delay: 1100 },
+    { html: '<span class="t-agent">FactCheckerAgent</span> <span class="t-success">✓ Done</span>', delay: 800 },
+    { html: '<span class="t-agent">EditorAgent</span> ▶ Polishing final output...', delay: 1000 },
+    { html: '<span class="t-agent">EditorAgent</span> <span class="t-success">✓ Done</span>', delay: 700 },
+    { html: '<span class="t-success">[Orchestrator] ✅ Task COMPLETE</span> — saved to agentos.db', delay: 600 },
+    { html: '<span class="t-prompt">$</span> <span class="t-cursor"></span>', delay: 0 }
+  ];
+
+  const terminalBody = document.getElementById('terminalBody');
+  let lineIndex = 0;
+  let demoRunning = false;
+
+  function runDemo() {
+    if (demoRunning) return;
+    demoRunning = true;
+    lineIndex = 0;
+    // Keep first line, clear rest
+    const first = terminalBody.querySelector('.terminal-line');
+    terminalBody.innerHTML = '';
+    if (first) terminalBody.appendChild(first);
+
+    function addNext() {
+      if (lineIndex >= lines.length) {
+        demoRunning = false;
+        setTimeout(function () {
+          terminalBody.innerHTML = '<div class="terminal-line visible"><span class="t-prompt">$</span> <span class="t-goal">goal "Write a report on renewable energy in India"</span></div>';
+          lineIndex = 0;
+          setTimeout(runDemo, 2500);
+        }, 3000);
+        return;
+      }
+      const item = lines[lineIndex];
+      const div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.innerHTML = item.html;
+      div.style.animationDelay = '0s';
+      terminalBody.appendChild(div);
+      requestAnimationFrame(function () {
+        div.classList.add('visible');
+      });
+      terminalBody.scrollTop = terminalBody.scrollHeight;
+      lineIndex++;
+      setTimeout(addNext, item.delay);
+    }
+
+    setTimeout(addNext, 1500);
+  }
+
+  // Start demo when section is visible
+  const demoObs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        runDemo();
+        demoObs.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  const demoSection = document.getElementById('demo');
+  if (demoSection) demoObs.observe(demoSection);
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      const id = a.getAttribute('href');
+      if (id === '#') return;
+      const el = document.querySelector(id);
+      if (el) {
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        nav.classList.remove('open');
+        headerActions.classList.remove('open');
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
