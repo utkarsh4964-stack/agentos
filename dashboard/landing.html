@@ -931,5 +931,171 @@
   });
 })();
 </script>
+<!-- Signup Modal -->
+<div id="signupModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+  <div style="background:#14112A; border:1px solid #6C47FF; border-radius:16px; padding:40px; width:90%; max-width:400px; position:relative;">
+    <button onclick="closeModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#888; font-size:20px; cursor:pointer;">✕</button>
+
+    <!-- Signup Form -->
+    <div id="signupForm">
+      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Create Account</h2>
+      <p style="color:#888; margin-bottom:24px;">Start with 5 free tasks per day</p>
+      <input id="signupEmail" type="email" placeholder="your@email.com"
+        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <input id="signupPassword" type="password" placeholder="Password (min 6 chars)"
+        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <p id="signupError" style="color:#EF4444; font-size:13px; margin-bottom:12px; display:none;"></p>
+      <button onclick="doSignup()"
+        style="width:100%; padding:14px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer;">
+        Create Free Account
+      </button>
+      <p style="color:#888; font-size:12px; text-align:center; margin-top:12px;">
+        Already have an account?
+        <span onclick="showLogin()" style="color:#6C47FF; cursor:pointer;">Log in</span>
+      </p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm" style="display:none;">
+      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Welcome Back</h2>
+      <p style="color:#888; margin-bottom:24px;">Log in to your AgentOS account</p>
+      <input id="loginEmail" type="email" placeholder="your@email.com"
+        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <input id="loginPassword" type="password" placeholder="Password"
+        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <p id="loginError" style="color:#EF4444; font-size:13px; margin-bottom:12px; display:none;"></p>
+      <button onclick="doLogin()"
+        style="width:100%; padding:14px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer;">
+        Log In
+      </button>
+      <p style="color:#888; font-size:12px; text-align:center; margin-top:12px;">
+        No account?
+        <span onclick="showSignup()" style="color:#6C47FF; cursor:pointer;">Sign up free</span>
+      </p>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="successScreen" style="display:none; text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;">🎉</div>
+      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Account Created!</h2>
+      <p style="color:#888; margin-bottom:24px;">Here is your API key</p>
+      <div style="background:#0A0918; border:1px solid #6C47FF; border-radius:8px; padding:16px; margin-bottom:16px;">
+        <p id="apiKeyDisplay" style="color:#00C4A1; font-family:monospace; font-size:13px; word-break:break-all;"></p>
+      </div>
+      <button onclick="copyApiKey()"
+        style="width:100%; padding:12px; background:#00C4A1; color:#0A0918; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px;">
+        Copy API Key
+      </button>
+      <p style="color:#888; font-size:12px;">Save this key. You'll need it to use the API.</p>
+      <button onclick="goToDashboard()"
+        style="width:100%; padding:12px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; margin-top:12px;">
+        Go to Dashboard →
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+let currentApiKey = "";
+
+function openModal() {
+  document.getElementById("signupModal").style.display = "flex";
+}
+function closeModal() {
+  document.getElementById("signupModal").style.display = "none";
+}
+function showLogin() {
+  document.getElementById("signupForm").style.display = "none";
+  document.getElementById("loginForm").style.display = "block";
+}
+function showSignup() {
+  document.getElementById("loginForm").style.display = "none";
+  document.getElementById("signupForm").style.display = "block";
+}
+
+async function doSignup() {
+  const email = document.getElementById("signupEmail").value;
+  const password = document.getElementById("signupPassword").value;
+  const errEl = document.getElementById("signupError");
+  errEl.style.display = "none";
+  if (!email || !password) {
+    errEl.textContent = "Please fill in all fields";
+    errEl.style.display = "block";
+    return;
+  }
+  try {
+    const r = await fetch(`${API}/auth/signup`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({email, password})
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      errEl.textContent = data.detail || "Signup failed";
+      errEl.style.display = "block";
+      return;
+    }
+    currentApiKey = data.api_key;
+    document.getElementById("apiKeyDisplay").textContent = data.api_key;
+    document.getElementById("signupForm").style.display = "none";
+    document.getElementById("successScreen").style.display = "block";
+  } catch(e) {
+    errEl.textContent = "Connection error. Is the server running?";
+    errEl.style.display = "block";
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginError");
+  errEl.style.display = "none";
+  try {
+    const r = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({email, password})
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      errEl.textContent = data.detail || "Login failed";
+      errEl.style.display = "block";
+      return;
+    }
+    currentApiKey = data.api_key;
+    document.getElementById("apiKeyDisplay").textContent = data.api_key;
+    document.getElementById("loginForm").style.display = "none";
+    document.getElementById("successScreen").style.display = "block";
+  } catch(e) {
+    errEl.textContent = "Connection error.";
+    errEl.style.display = "block";
+  }
+}
+
+function copyApiKey() {
+  navigator.clipboard.writeText(currentApiKey);
+  event.target.textContent = "Copied! ✓";
+  setTimeout(() => event.target.textContent = "Copy API Key", 2000);
+}
+
+function goToDashboard() {
+  window.location.href = "/dashboard";
+}
+
+// Wire up all "Get Started" buttons
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("button, a").forEach(el => {
+    if (el.textContent.includes("Get Started") ||
+        el.textContent.includes("Try Free") ||
+        el.textContent.includes("Upgrade to Pro")) {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        openModal();
+      });
+    }
+  });
+});
+</script>
 </body>
 </html>

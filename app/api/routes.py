@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 import asyncio
 import json
-
+from app.auth import create_user, login_user, get_user_by_api_key
 from app.agents.registry import AgentRegistry
 from app.agents.base import BaseAgent
 from app.orchestrator.orchestrator import Orchestrator
@@ -153,3 +153,45 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         if websocket in active_connections:
             active_connections.remove(websocket)
+# ── Auth endpoints ───────────────────────────────────────────────
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@router.post("/auth/signup")
+def signup(req: SignupRequest):
+    if not req.email or not req.password:
+        raise HTTPException(status_code=400, detail="Email and password required")
+    if len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    result = create_user(req.email, req.password)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+@router.post("/auth/login")
+def login(req: LoginRequest):
+    result = login_user(req.email, req.password)
+    if "error" in result:
+        raise HTTPException(status_code=401, detail=result["error"])
+    return result
+
+@router.get("/auth/me")
+def get_me(x_api_key: str = None):
+    from fastapi import Header
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required. Pass X-API-Key header.")
+    user = get_user_by_api_key(x_api_key)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return {
+        "email": user["email"],
+        "plan": user["plan"],
+        "api_key": user["api_key"],
+        "created_at": user["created_at"]
+    }
