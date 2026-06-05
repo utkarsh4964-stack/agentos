@@ -38,7 +38,6 @@ def create_users_table():
 def create_user(email: str, password: str) -> dict:
     create_users_table()
     conn = get_db()
-    # Check if email exists
     existing = conn.execute(
         "SELECT id FROM users WHERE email = ?", (email,)
     ).fetchone()
@@ -95,4 +94,35 @@ def login_user(email: str, password: str) -> dict:
         "email": user["email"],
         "api_key": user["api_key"],
         "plan": user["plan"]
+    }
+
+def check_usage_limit(api_key: str) -> dict:
+    """Check if user has exceeded their daily limit."""
+    user = get_user_by_api_key(api_key)
+    if not user:
+        return {"allowed": False, "reason": "Invalid API key"}
+    if user["plan"] in ["pro", "team"]:
+        return {"allowed": True, "plan": user["plan"], "limit": "unlimited"}
+    conn = get_db()
+    today = datetime.now().strftime("%Y-%m-%d")
+    count = conn.execute("""
+        SELECT COUNT(*) as cnt FROM tasks
+        WHERE created_at LIKE ? || '%'
+    """, (today,)).fetchone()
+    conn.close()
+    daily_count = count["cnt"] if count else 0
+    if daily_count >= 5:
+        return {
+            "allowed": False,
+            "reason": "Daily limit reached. Upgrade to Pro for unlimited tasks.",
+            "used": daily_count,
+            "limit": 5,
+            "plan": "free"
+        }
+    return {
+        "allowed": True,
+        "used": daily_count,
+        "limit": 5,
+        "remaining": 5 - daily_count,
+        "plan": "free"
     }

@@ -1,34 +1,18 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 import asyncio
 import json
-from app.auth import create_user, login_user, get_user_by_api_key
+
+from app.auth import create_user, login_user, get_user_by_api_key, check_usage_limit
 from app.agents.registry import AgentRegistry
 from app.agents.base import BaseAgent
 from app.orchestrator.orchestrator import Orchestrator
 from app.memory.memory_store import MemoryStore
 from app.resources.resource_manager import ResourceManager
 from app.comms.message_bus import MessageBus
-from fastapi import Header
-from typing import Optional
 
-def get_current_user(x_api_key: Optional[str] = Header(None)):
-    if not x_api_key:
-        raise HTTPException(
-            status_code=401,
-            detail="API key required. Add header: X-API-Key: your_key"
-        )
-    user = get_user_by_api_key(x_api_key)
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid API key"
-        )
-    return user
 router = APIRouter()
-
-# WebSocket connections
 active_connections = []
 
 class GoalRequest(BaseModel):
@@ -39,14 +23,15 @@ class AgentRequest(BaseModel):
     role: str
     goal: Optional[str] = ""
 
-class MessageRequest(BaseModel):
-    from_agent: str
-    to_agent: str
-    content: str
-    msg_type: Optional[str] = "TASK"
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 async def broadcast_update(message: str):
-    """Send live update to all connected dashboards."""
     dead = []
     for ws in active_connections:
         try:
@@ -74,19 +59,19 @@ def register_agent(req: AgentRequest):
 
 @router.post("/tasks/submit")
 async def submit_task(req: GoalRequest, x_api_key: Optional[str] = Header(None)):
+    # Check API key
     if not x_api_key:
         raise HTTPException(status_code=401, detail="API key required")
     user = get_user_by_api_key(x_api_key)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid API key")
+
+    # Check usage limit
+    usage = check_usage_limit(x_api_key)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=429, detail=usage["reason"])
+
     orchestrator = Orchestrator()
-
-    updates = []
-    def on_update(msg):
-        updates.append(msg)
-        asyncio.create_task(broadcast_update(msg))
-
-    # Run in background so API returns task_id immediately
     import threading
     task_container = {}
 
@@ -97,7 +82,7 @@ async def submit_task(req: GoalRequest, x_api_key: Optional[str] = Header(None))
 
     thread = threading.Thread(target=run_task)
     thread.start()
-    thread.join()  # Wait for completion (sync for simplicity)
+    thread.join()
 
     task = task_container.get("task")
     if task:
@@ -167,21 +152,13 @@ async def websocket_endpoint(websocket: WebSocket):
             "message": "🤖 AgentOS Live Feed Connected"
         }))
         while True:
-            # Keep alive
             await asyncio.sleep(1)
             await websocket.send_text(json.dumps({"type": "ping"}))
     except WebSocketDisconnect:
         if websocket in active_connections:
             active_connections.remove(websocket)
+
 # ── Auth endpoints ───────────────────────────────────────────────
-
-class SignupRequest(BaseModel):
-    email: str
-    password: str
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
 
 @router.post("/auth/signup")
 def signup(req: SignupRequest):
@@ -202,10 +179,9 @@ def login(req: LoginRequest):
     return result
 
 @router.get("/auth/me")
-def get_me(x_api_key: str = None):
-    from fastapi import Header
+def get_me(x_api_key: Optional[str] = Header(None)):
     if not x_api_key:
-        raise HTTPException(status_code=401, detail="API key required. Pass X-API-Key header.")
+        raise HTTPException(status_code=401, detail="API key required")
     user = get_user_by_api_key(x_api_key)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid API key")
@@ -215,3 +191,10 @@ def get_me(x_api_key: str = None):
         "api_key": user["api_key"],
         "created_at": user["created_at"]
     }
+
+@router.get("/auth/usage")
+def get_usage_stats(x_api_key: Optional[str] = Header(None)):
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    usage = check_usage_limit(x_api_key)
+    return usage
