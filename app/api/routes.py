@@ -10,7 +10,22 @@ from app.orchestrator.orchestrator import Orchestrator
 from app.memory.memory_store import MemoryStore
 from app.resources.resource_manager import ResourceManager
 from app.comms.message_bus import MessageBus
+from fastapi import Header
+from typing import Optional
 
+def get_current_user(x_api_key: Optional[str] = Header(None)):
+    if not x_api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="API key required. Add header: X-API-Key: your_key"
+        )
+    user = get_user_by_api_key(x_api_key)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid API key"
+        )
+    return user
 router = APIRouter()
 
 # WebSocket connections
@@ -58,7 +73,12 @@ def register_agent(req: AgentRequest):
 # ── Task endpoints ───────────────────────────────────────────────
 
 @router.post("/tasks/submit")
-async def submit_task(req: GoalRequest):
+async def submit_task(req: GoalRequest, x_api_key: Optional[str] = Header(None)):
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    user = get_user_by_api_key(x_api_key)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid API key")
     orchestrator = Orchestrator()
 
     updates = []
