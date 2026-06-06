@@ -189,18 +189,6 @@ Professional report generated automatically.
 
 ---
 
-# 📸 Screenshots
-
-> Add dashboard screenshots here.
-
-```md
-![Dashboard](assets/dashboard.png)
-
-![Workflow Execution](assets/workflow.png)
-```
-
----
-
 # 📡 API Endpoints
 
 | Method | Endpoint       | Description           |
