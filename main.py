@@ -24,7 +24,10 @@ app.add_middleware(
 
 app.include_router(router)
 
-
+@app.get("/account")
+async def account_page():
+    from fastapi.responses import FileResponse
+    return FileResponse("dashboard/account.html")
 @app.get("/", include_in_schema=False)
 async def landing_page():
     """Marketing landing page."""

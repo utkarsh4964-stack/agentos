@@ -1080,7 +1080,8 @@ function copyApiKey() {
 }
 
 function goToDashboard() {
-  window.location.href = "/dashboard";
+  localStorage.setItem("agos_api_key", currentApiKey);
+  window.location.href = "/account";
 }
 
 // Wire up all "Get Started" buttons

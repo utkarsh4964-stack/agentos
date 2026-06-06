@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentOS — My Account</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0A0918;
+    color: #E8E4FF;
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    background: #14112A;
+    border-bottom: 1px solid #2A2550;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo { font-size: 20px; font-weight: 700; color: white; }
+  .logo span { color: #6C47FF; }
+  .nav-links { display: flex; gap: 24px; align-items: center; }
+  .nav-links a {
+    color: #8B85B0;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary { background: #6C47FF; color: white; }
+  .btn-danger { background: #EF4444; color: white; }
+  .btn-teal { background: #00C4A1; color: #0A0918; }
+
+  .container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 24px;
+  }
+  .welcome {
+    margin-bottom: 32px;
+  }
+  .welcome h1 {
+    font-size: 28px;
+    color: white;
+    margin-bottom: 6px;
+  }
+  .welcome p { color: #8B85B0; font-size: 14px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: #14112A;
+    border: 1px solid #2A2550;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8B85B0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .card-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #6C47FF;
+    margin-bottom: 4px;
+  }
+  .card-label { font-size: 13px; color: #8B85B0; }
+
+  .plan-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .plan-free { background: #2A2550; color: #8B85B0; }
+  .plan-pro { background: #4C1D95; color: #A78BFA; }
+  .plan-team { background: #064E3B; color: #34D399; }
+
+  .api-key-box {
+    background: #0A0918;
+    border: 1px solid #2A2550;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #00C4A1;
+    word-break: break-all;
+    margin-bottom: 12px;
+  }
+  .copy-btn {
+    background: #00C4A1;
+    color: #0A0918;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .progress-wrap {
+    background: #2A2550;
+    border-radius: 4px;
+    height: 6px;
+    margin: 8px 0;
+  }
+  .progress-bar {
+    height: 6px;
+    border-radius: 4px;
+    background: #6C47FF;
+    transition: width .5s;
+  }
+
+  .upgrade-box {
+    background: linear-gradient(135deg, #1A1040, #2D1B69);
+    border: 1px solid #6C47FF;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .upgrade-box h3 { color: white; margin-bottom: 6px; }
+  .upgrade-box p { color: #8B85B0; font-size: 13px; }
+
+  .tasks-list { }
+  .task-item {
+    background: #14112A;
+    border: 1px solid #2A2550;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .task-goal { font-size: 13px; color: white; }
+  .task-meta { font-size: 11px; color: #8B85B0; margin-top: 3px; }
+  .badge {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-done { background: #064E3B; color: #34D399; }
+  .badge-pending { background: #2A2550; color: #8B85B0; }
+  .badge-failed { background: #7F1D1D; color: #EF4444; }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid #EF4444;
+    color: #EF4444;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  #loginPrompt {
+    text-align: center;
+    padding: 80px 24px;
+  }
+  #loginPrompt h2 { color: white; margin-bottom: 12px; }
+  #loginPrompt p { color: #8B85B0; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🤖 Agent<span>OS</span></div>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/docs">API Docs</a>
+    <button class="logout-btn" onclick="logout()">Log Out</button>
+  </div>
+</header>
+
+<!-- Login Prompt (shown if not logged in) -->
+<div id="loginPrompt" style="display:none">
+  <h2>Please log in to view your account</h2>
+  <p>You need an API key to access your account page.</p>
+  <button class="btn btn-primary" onclick="window.location.href='/'">
+    Go to Homepage
+  </button>
+</div>
+
+<!-- Account Content -->
+<div class="container" id="accountContent" style="display:none">
+
+  <div class="welcome">
+    <h1>Welcome back, <span id="userEmail">...</span></h1>
+    <p>Manage your AgentOS account and API access</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Current Plan</div>
+      <div style="margin-top:8px">
+        <span class="plan-badge plan-free" id="planBadge">FREE</span>
+      </div>
+      <div class="card-label" style="margin-top:10px">
+        <span id="planDesc">5 tasks per day</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tasks Today</div>
+      <div class="card-value" id="tasksUsed">0</div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="usageBar" style="width:0%"></div>
+      </div>
+      <div class="card-label">
+        <span id="tasksRemaining">5 remaining today</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Your API Key</div>
+    <div class="api-key-box" id="apiKeyBox">Loading...</div>
+    <button class="copy-btn" onclick="copyKey()">Copy API Key</button>
+    <p style="color:#8B85B0; font-size:12px; margin-top:10px;">
+      Use this key in the X-API-Key header for all API requests.
+    </p>
+  </div>
+
+  <!-- Upgrade Box (only for free users) -->
+  <div class="upgrade-box" id="upgradeBox">
+    <div>
+      <h3>Upgrade to Pro</h3>
+      <p>Unlimited tasks, all 5 agents, full memory — Rs 499/month</p>
+    </div>
+    <button class="btn btn-primary" onclick="upgrade()">
+      Upgrade to Pro →
+    </button>
+  </div>
+
+  <!-- Quick Start -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Quick Start</div>
+    <p style="color:#8B85B0; font-size:13px; margin-bottom:12px;">
+      Use your API key to submit tasks programmatically:
+    </p>
+    <div style="background:#0A0918; border-radius:8px; padding:16px; font-family:monospace; font-size:12px; color:#00C4A1;">
+      curl -X POST https://agentos-production-5783.up.railway.app/tasks/submit \<br>
+      &nbsp;&nbsp;-H "X-API-Key: <span id="curlKey">your_key</span>" \<br>
+      &nbsp;&nbsp;-H "Content-Type: application/json" \<br>
+      &nbsp;&nbsp;-d '{"goal": "Write a report on AI"}'
+    </div>
+  </div>
+
+  <!-- Task History -->
+  <div class="card">
+    <div class="card-title">Recent Tasks</div>
+    <div id="taskHistory" style="margin-top:12px;">
+      <p style="color:#8B85B0; font-size:13px;">Loading tasks...</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = window.location.origin;
+let userApiKey = localStorage.getItem("agos_api_key") || "";
+
+window.onload = async () => {
+  if (!userApiKey) {
+    document.getElementById("loginPrompt").style.display = "block";
+    return;
+  }
+  await loadAccount();
+};
+
+async function loadAccount() {
+  try {
+    // Get user info
+    const r = await fetch(`${API}/auth/me`, {
+      headers: {"X-API-Key": userApiKey}
+    });
+    if (!r.ok) {
+      document.getElementById("loginPrompt").style.display = "block";
+      return;
+    }
+    const user = await r.json();
+
+    // Get usage
+    const ur = await fetch(`${API}/auth/usage`, {
+      headers: {"X-API-Key": userApiKey}
+    });
+    const usage = await ur.json();
+
+    // Show content
+    document.getElementById("accountContent").style.display = "block";
+    document.getElementById("userEmail").textContent = user.email;
+    document.getElementById("apiKeyBox").textContent = user.api_key;
+    document.getElementById("curlKey").textContent = user.api_key;
+
+    // Plan
+    const plan = user.plan;
+    const badge = document.getElementById("planBadge");
+    badge.textContent = plan.toUpperCase();
+    badge.className = `plan-badge plan-${plan}`;
+
+    if (plan === "pro" || plan === "team") {
+      document.getElementById("planDesc").textContent = "Unlimited tasks";
+      document.getElementById("upgradeBox").style.display = "none";
+      document.getElementById("tasksUsed").textContent = usage.used || 0;
+      document.getElementById("tasksRemaining").textContent = "Unlimited";
+      document.getElementById("usageBar").style.width = "10%";
+    } else {
+      document.getElementById("planDesc").textContent = "5 tasks per day";
+      const used = usage.used || 0;
+      const pct = (used / 5) * 100;
+      document.getElementById("tasksUsed").textContent = used;
+      document.getElementById("usageBar").style.width = pct + "%";
+      document.getElementById("tasksRemaining").textContent =
+        `${usage.remaining || 0} remaining today`;
+    }
+
+    // Tasks
+    loadTasks();
+
+  } catch(e) {
+    document.getElementById("loginPrompt").style.display = "block";
+  }
+}
+
+async function loadTasks() {
+  try {
+    const r = await fetch(`${API}/tasks`);
+    const data = await r.json();
+    const tasks = (data.tasks || []).slice(-5).reverse();
+    const el = document.getElementById("taskHistory");
+    if (!tasks.length) {
+      el.innerHTML = '<p style="color:#8B85B0;font-size:13px">No tasks yet. Submit your first goal!</p>';
+      return;
+    }
+    el.innerHTML = tasks.map(t => `
+      <div class="task-item">
+        <div>
+          <div class="task-goal">${t.goal}</div>
+          <div class="task-meta">${t.created_at ? t.created_at.substring(0,16) : ''}</div>
+        </div>
+        <span class="badge badge-${t.status === 'DONE' ? 'done' : t.status === 'FAILED' ? 'failed' : 'pending'}">
+          ${t.status}
+        </span>
+      </div>
+    `).join("");
+  } catch(e) {}
+}
+
+function copyKey() {
+  navigator.clipboard.writeText(userApiKey);
+  event.target.textContent = "Copied! ✓";
+  setTimeout(() => event.target.textContent = "Copy API Key", 2000);
+}
+
+function upgrade() {
+  alert("Payment system coming soon! Email utkarsh@agentos.dev to upgrade manually.");
+}
+
+function logout() {
+  localStorage.removeItem("agos_api_key");
+  window.location.href = "/";
+}
+</script>
+
+</body>
+</html>
