@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 import asyncio
 import json
+import uuid
 
 from app.auth import create_user, login_user, get_user_by_api_key, check_usage_limit
 from app.agents.registry import AgentRegistry
@@ -30,6 +31,15 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class CustomAgentRequest(BaseModel):
+    name: str
+    instructions: str
+    order: int = 0
+
+class PipelineRunRequest(BaseModel):
+    goal: str
+    agent_ids: Optional[list] = None
 
 async def broadcast_update(message: str):
     dead = []
@@ -59,14 +69,12 @@ def register_agent(req: AgentRequest):
 
 @router.post("/tasks/submit")
 async def submit_task(req: GoalRequest, x_api_key: Optional[str] = Header(None)):
-    # Check API key
     if not x_api_key:
         raise HTTPException(status_code=401, detail="API key required")
     user = get_user_by_api_key(x_api_key)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
-    # Check usage limit
     usage = check_usage_limit(x_api_key)
     if not usage["allowed"]:
         raise HTTPException(status_code=429, detail=usage["reason"])
@@ -198,3 +206,86 @@ def get_usage_stats(x_api_key: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="API key required")
     usage = check_usage_limit(x_api_key)
     return usage
+
+# ── Pipeline / Custom Agent endpoints ────────────────────────────
+
+@router.post("/pipeline/agents")
+def create_custom_agent(req: CustomAgentRequest, x_api_key: Optional[str] = Header(None)):
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    user = get_user_by_api_key(x_api_key)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    from app.database import SQLiteDatabase
+    db = SQLiteDatabase()
+    agent_id = str(uuid.uuid4())[:8]
+    db.save_custom_agent(agent_id, x_api_key, req.name, req.instructions, req.order)
+    return {"status": "created", "agent_id": agent_id, "name": req.name}
+
+@router.get("/pipeline/agents")
+def get_custom_agents(x_api_key: Optional[str] = Header(None)):
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    user = get_user_by_api_key(x_api_key)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    from app.database import SQLiteDatabase
+    db = SQLiteDatabase()
+    agents = db.get_custom_agents(x_api_key)
+    return {"agents": agents}
+
+@router.delete("/pipeline/agents/{agent_id}")
+def delete_custom_agent(agent_id: str, x_api_key: Optional[str] = Header(None)):
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    from app.database import SQLiteDatabase
+    db = SQLiteDatabase()
+    db.delete_custom_agent(agent_id, x_api_key)
+    return {"status": "deleted"}
+
+@router.post("/pipeline/run")
+async def run_custom_pipeline(req: PipelineRunRequest, x_api_key: Optional[str] = Header(None)):
+    if not x_api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    user = get_user_by_api_key(x_api_key)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    from app.database import SQLiteDatabase
+    import time
+
+    db = SQLiteDatabase()
+    custom_agents = db.get_custom_agents(x_api_key)
+
+    if not custom_agents:
+        raise HTTPException(status_code=400, detail="No agents found. Create agents first.")
+
+    task_id = str(uuid.uuid4())[:8]
+    results = []
+    previous_output = ""
+
+    for agent_data in custom_agents:
+        agent = BaseAgent(
+            name=agent_data["name"],
+            role=agent_data["instructions"],
+            goal=req.goal
+        )
+        task_input = req.goal
+        if previous_output:
+            task_input += f"\n\nPrevious agent output:\n{previous_output}"
+
+        result = agent.run(task_input)
+        previous_output = result
+        results.append({
+            "agent": agent_data["name"],
+            "output": result
+        })
+        await broadcast_update(f"✅ {agent_data['name']} done")
+
+    return {
+        "task_id": task_id,
+        "goal": req.goal,
+        "pipeline": [a["name"] for a in custom_agents],
+        "final_output": previous_output,
+        "steps": results
+    }

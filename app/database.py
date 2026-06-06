@@ -65,6 +65,20 @@ class SQLiteDatabase:
                     msg_type TEXT NOT NULL,
                     timestamp TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS custom_agents (
+                    id TEXT PRIMARY KEY,
+                    user_api_key TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    instructions TEXT NOT NULL,
+                    agent_order INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS pipelines (
+                    id TEXT PRIMARY KEY,
+                    user_api_key TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
             """)
 
     def _status_value(self, status) -> str:
@@ -187,4 +201,32 @@ class SQLiteDatabase:
                     msg_type,
                     message.timestamp,
                 ),
+            )
+
+    def save_custom_agent(self, agent_id: str, api_key: str, name: str, instructions: str, order: int) -> None:
+        ts = datetime.now().isoformat()
+        with self._connect() as conn:
+            conn.execute(
+                """INSERT INTO custom_agents (id, user_api_key, name, instructions, agent_order, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(id) DO UPDATE SET
+                     name=excluded.name,
+                     instructions=excluded.instructions,
+                     agent_order=excluded.agent_order""",
+                (agent_id, api_key, name, instructions, order, ts)
+            )
+
+    def get_custom_agents(self, api_key: str) -> list:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM custom_agents WHERE user_api_key = ? ORDER BY agent_order ASC",
+                (api_key,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def delete_custom_agent(self, agent_id: str, api_key: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "DELETE FROM custom_agents WHERE id = ? AND user_api_key = ?",
+                (agent_id, api_key)
             )

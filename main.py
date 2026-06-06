@@ -39,7 +39,9 @@ async def landing_page():
 async def dashboard_page():
     """Live agent dashboard."""
     return FileResponse(DASHBOARD_DIR / "index.html")
-
+@app.get("/pipeline", include_in_schema=False)
+async def pipeline_page():
+    return FileResponse(DASHBOARD_DIR / "pipeline.html")
 
 # Other files in dashboard/ (e.g. /landing.html) — mount last so API routes win
 app.mount(
