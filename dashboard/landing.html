@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOS — The Operating System for AI Agents</title>
+<title>AgentOS — No-Code AI Workflow Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -34,7 +34,6 @@
     overflow-x: hidden;
   }
 
-  /* Ambient background */
   body::before {
     content: '';
     position: fixed;
@@ -48,15 +47,12 @@
   }
 
   .wrap { position: relative; z-index: 1; }
-
   a { color: inherit; text-decoration: none; }
 
   /* ── Header ── */
   header {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     z-index: 100;
     display: flex;
     align-items: center;
@@ -67,583 +63,334 @@
     border-bottom: 1px solid transparent;
     transition: border-color 0.3s, background 0.3s;
   }
+  header.scrolled { border-bottom-color: var(--border); background: rgba(10, 9, 24, 0.95); }
 
-  header.scrolled {
-    border-bottom-color: var(--border);
-    background: rgba(10, 9, 24, 0.95);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--white);
-  }
-
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 800; color: var(--white); }
   .logo span:first-child { font-size: 1.5rem; }
 
-  nav {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-  }
-
-  nav a {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--muted);
-    transition: color 0.2s;
-  }
-
+  nav { display: flex; align-items: center; gap: 32px; }
+  nav a { font-size: 0.9rem; font-weight: 500; color: var(--muted); transition: color 0.2s; }
   nav a:hover { color: var(--text); }
 
   .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; border: none; transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
     font-family: inherit;
   }
-
   .btn:hover { transform: translateY(-1px); }
   .btn:active { transform: translateY(0); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #8B6FFF); color: var(--white); box-shadow: 0 4px 24px var(--accent-glow); }
+  .btn-primary:hover { box-shadow: 0 8px 32px var(--accent-glow); }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--white); }
+  .btn-teal { background: linear-gradient(135deg, var(--teal), #00E5BB); color: var(--bg); font-weight: 800; }
+  .btn-teal:hover { box-shadow: 0 8px 32px var(--teal-glow); }
+  .btn-outline-teal { background: transparent; border: 1px solid var(--teal); color: var(--teal); }
+  .btn-outline-teal:hover { background: rgba(0, 196, 161, 0.1); }
 
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #8B6FFF);
-    color: var(--white);
-    box-shadow: 0 4px 24px var(--accent-glow);
-  }
-
-  .btn-primary:hover {
-    box-shadow: 0 8px 32px var(--accent-glow);
-  }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--accent);
-    color: var(--white);
-  }
-
-  .btn-teal {
-    background: linear-gradient(135deg, var(--teal), #00E5BB);
-    color: var(--bg);
-  }
-
-  .btn-outline-teal {
-    background: transparent;
-    border: 1px solid var(--teal);
-    color: var(--teal);
-  }
-
-  .btn-outline-teal:hover {
-    background: rgba(0, 196, 161, 0.1);
-  }
-
-  .nav-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 1.5rem;
-    cursor: pointer;
-  }
+  .nav-toggle { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
 
   /* ── Hero ── */
   .hero {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center;
     padding: 120px 5% 80px;
   }
 
   .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    font-size: 0.8rem;
-    color: var(--teal);
-    font-weight: 600;
-    margin-bottom: 28px;
-    animation: fadeUp 0.8s ease both;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 100px; font-size: 0.8rem; color: var(--teal); font-weight: 600;
+    margin-bottom: 28px; animation: fadeUp 0.8s ease both;
   }
-
   .hero-badge::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: var(--teal);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
+    content: ''; width: 6px; height: 6px; background: var(--teal);
+    border-radius: 50%; animation: pulse 2s infinite;
   }
 
   .hero h1 {
-    font-size: clamp(2.25rem, 6vw, 3.75rem);
-    font-weight: 800;
-    line-height: 1.15;
-    color: var(--white);
-    max-width: 900px;
-    margin-bottom: 24px;
-    letter-spacing: -0.02em;
-    animation: fadeUp 0.8s 0.1s ease both;
+    font-size: clamp(2.25rem, 6vw, 3.75rem); font-weight: 800; line-height: 1.15;
+    color: var(--white); max-width: 900px; margin-bottom: 24px;
+    letter-spacing: -0.02em; animation: fadeUp 0.8s 0.1s ease both;
   }
-
   .hero h1 .gradient {
     background: linear-gradient(135deg, var(--accent) 0%, var(--teal) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
 
   .hero .sub {
-    font-size: clamp(1rem, 2.5vw, 1.2rem);
-    color: var(--muted);
-    max-width: 640px;
-    margin-bottom: 40px;
-    line-height: 1.7;
-    animation: fadeUp 0.8s 0.2s ease both;
+    font-size: clamp(1rem, 2.5vw, 1.2rem); color: var(--muted); max-width: 640px;
+    margin-bottom: 40px; line-height: 1.7; animation: fadeUp 0.8s 0.2s ease both;
   }
 
   .hero-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    justify-content: center;
-    margin-bottom: 48px;
-    animation: fadeUp 0.8s 0.3s ease both;
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+    margin-bottom: 48px; animation: fadeUp 0.8s 0.3s ease both;
   }
 
-  .hero-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 24px;
-    justify-content: center;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--muted);
+  /* Pipeline preview box */
+  .hero-preview {
     animation: fadeUp 0.8s 0.4s ease both;
-  }
-
-  .hero-stats .stat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .hero-stats .dot {
-    color: var(--teal);
-    animation: blink 1.5s infinite;
-  }
-
-  .hero-stats .highlight {
-    color: var(--teal);
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.2); }
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  /* ── Sections ── */
-  section {
-    padding: 100px 5%;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .section-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--teal);
-    margin-bottom: 12px;
-    text-align: center;
-  }
-
-  .section-title {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    font-weight: 800;
-    color: var(--white);
-    text-align: center;
-    margin-bottom: 16px;
-  }
-
-  .section-desc {
-    text-align: center;
-    color: var(--muted);
-    max-width: 520px;
-    margin: 0 auto 56px;
-    font-size: 1.05rem;
-  }
-
-  /* ── How it works ── */
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
-  }
-
-  .step {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 36px 28px;
-    text-align: center;
-    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
-  }
-
-  .step:hover {
-    border-color: var(--accent);
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-  }
-
-  .step-num {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, var(--accent), #8B6FFF);
-    border-radius: 12px;
+    padding: 20px 28px;
     display: flex;
     align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
     justify-content: center;
-    font-size: 1.5rem;
-  }
-
-  .step h3 {
-    font-size: 1.15rem;
-    color: var(--white);
-    margin-bottom: 10px;
-  }
-
-  .step p {
-    font-size: 0.9rem;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  /* ── Features ── */
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-
-  .feature-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-    transition: all 0.3s;
-  }
-
-  .feature-card:hover {
-    border-color: rgba(0, 196, 161, 0.4);
-    box-shadow: 0 0 40px var(--teal-glow);
-  }
-
-  .feature-icon {
-    font-size: 2rem;
+    max-width: 700px;
     margin-bottom: 16px;
   }
 
-  .feature-card h3 {
-    font-size: 1.2rem;
-    color: var(--white);
-    margin-bottom: 10px;
+  .pipeline-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px;
+    font-size: 0.85rem; font-weight: 600; color: var(--text);
+  }
+  .pipeline-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+  .pipeline-arrow { color: var(--muted); font-size: 1rem; }
+  .pipeline-chip.custom { border-color: var(--accent); color: var(--accent); }
+  .hero-preview-label { font-size: 0.75rem; color: var(--muted); text-align: center; font-style: italic; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ── Sections ── */
+  section { padding: 100px 5%; max-width: 1200px; margin: 0 auto; }
+  .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--teal); margin-bottom: 12px; text-align: center; }
+  .section-title { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; color: var(--white); text-align: center; margin-bottom: 16px; }
+  .section-desc { text-align: center; color: var(--muted); max-width: 520px; margin: 0 auto 56px; font-size: 1.05rem; }
+
+  /* ── How it works ── */
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .step {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px 24px; text-align: center;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+  .step:not(:last-child)::after {
+    content: '→';
+    position: absolute; right: -16px; top: 50%; transform: translateY(-50%);
+    color: var(--border); font-size: 1.2rem; z-index: 1;
+  }
+  .step:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+  .step-num { width: 48px; height: 48px; margin: 0 auto 20px; background: linear-gradient(135deg, var(--accent), #8B6FFF); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+  .step h3 { font-size: 1.05rem; color: var(--white); margin-bottom: 8px; }
+  .step p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── Features ── */
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+  .feature-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px; transition: all 0.3s;
+  }
+  .feature-card:hover { border-color: rgba(0, 196, 161, 0.4); box-shadow: 0 0 40px var(--teal-glow); }
+  .feature-card.highlight { border-color: var(--accent); background: linear-gradient(135deg, #1E1645, var(--card)); }
+  .feature-card.highlight:hover { border-color: var(--teal); box-shadow: 0 0 60px var(--accent-glow); }
+
+  .feature-icon { font-size: 2rem; margin-bottom: 16px; }
+  .feature-card h3 { font-size: 1.2rem; color: var(--white); margin-bottom: 10px; }
+  .feature-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.65; }
+  .feature-new {
+    display: inline-block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; background: var(--accent); color: white;
+    padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
   }
 
-  .feature-card p {
-    font-size: 0.9rem;
-    color: var(--muted);
-    line-height: 1.65;
+  /* ── Pipeline builder showcase ── */
+  .builder-showcase {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .builder-showcase h3 { font-size: 1.6rem; font-weight: 800; color: var(--white); margin-bottom: 16px; }
+  .builder-showcase p { color: var(--muted); margin-bottom: 24px; line-height: 1.7; }
+
+  .builder-steps { display: flex; flex-direction: column; gap: 12px; }
+  .builder-step {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .builder-step-num {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--accent); color: white; font-size: 0.8rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .builder-step-content h4 { font-size: 0.9rem; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+  .builder-step-content p { font-size: 0.8rem; color: var(--muted); margin: 0; }
+
+  .mini-pipeline {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mini-pipeline-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+  .mini-agent {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.85rem;
+  }
+  .mini-agent.active { border-color: var(--accent); }
+  .mini-agent.done { border-color: var(--teal); }
+  .mini-agent-icon { font-size: 1rem; }
+  .mini-agent-info { flex: 1; }
+  .mini-agent-name { font-weight: 700; color: var(--white); font-size: 0.8rem; }
+  .mini-agent-role { font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .mini-badge { font-size: 0.65rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+  .mini-badge-done { background: rgba(0,196,161,0.15); color: var(--teal); }
+  .mini-badge-run { background: rgba(108,71,255,0.2); color: #A78BFA; }
+  .mini-connector { text-align: center; color: var(--border); font-size: 0.8rem; }
+  .mini-goal { background: rgba(108,71,255,0.1); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: var(--text); margin-top: 8px; }
+  .mini-goal-label { font-size: 0.65rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+
+  /* ── Use cases ── */
+  .usecases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .usecase {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; transition: all 0.3s;
+  }
+  .usecase:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .usecase-icon { font-size: 1.5rem; margin-bottom: 12px; }
+  .usecase h4 { font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .usecase p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+  .usecase-agents { display: flex; flex-wrap: wrap; gap: 6px; }
+  .usecase-tag {
+    font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 4px; padding: 2px 8px; color: var(--muted);
   }
 
   /* ── Pricing ── */
   #pricing { max-width: 1100px; }
-
-  .pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    align-items: stretch;
-  }
-
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: stretch; }
   .price-card {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 36px 28px;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px 28px;
+    display: flex; flex-direction: column; transition: transform 0.3s;
   }
-
   .price-card.featured {
     border-color: var(--accent);
     background: linear-gradient(180deg, #1E1645 0%, var(--bg-elevated) 100%);
     box-shadow: 0 0 60px var(--accent-glow);
-    transform: scale(1.03);
-    position: relative;
+    transform: scale(1.03); position: relative;
   }
-
   .price-card.featured::before {
-    content: 'Most Popular';
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 4px 14px;
-    border-radius: 100px;
-    letter-spacing: 0.05em;
+    content: 'Most Popular'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: white; font-size: 0.7rem; font-weight: 700;
+    padding: 4px 14px; border-radius: 100px; letter-spacing: 0.05em;
   }
-
-  .price-tier {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--white);
-    margin-bottom: 8px;
-  }
-
-  .price-amount {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--white);
-    margin-bottom: 4px;
-  }
-
-  .price-amount span {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--muted);
-  }
-
-  .price-features {
-    list-style: none;
-    margin: 28px 0;
-    flex: 1;
-  }
-
+  .price-tier { font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .price-amount { font-size: 2.5rem; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+  .price-amount span { font-size: 1rem; font-weight: 500; color: var(--muted); }
+  .price-features { list-style: none; margin: 28px 0; flex: 1; }
   .price-features li {
-    font-size: 0.9rem;
-    color: var(--muted);
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 0.9rem; color: var(--muted); padding: 10px 0;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
   }
-
-  .price-features li::before {
-    content: '✓';
-    color: var(--teal);
-    font-weight: 700;
-  }
-
+  .price-features li::before { content: '✓'; color: var(--teal); font-weight: 700; }
   .price-card .btn { width: 100%; margin-top: auto; }
 
   /* ── Demo terminal ── */
-  .demo-section {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 100px 5%;
-  }
-
+  .demo-section { max-width: 900px; margin: 0 auto; padding: 100px 5%; }
   .terminal {
-    background: #05040F;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+    background: #05040F; border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.5);
   }
-
   .terminal-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 18px;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 18px; background: var(--card); border-bottom: 1px solid var(--border);
   }
-
-  .terminal-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-  }
-
+  .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
   .terminal-dot.red { background: #EF4444; }
   .terminal-dot.yellow { background: #F59E0B; }
   .terminal-dot.green { background: #22C55E; }
-
-  .terminal-title {
-    margin-left: 12px;
-    font-size: 0.8rem;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .terminal-body {
-    padding: 24px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    line-height: 1.8;
-    min-height: 280px;
-  }
-
-  .terminal-line {
-    margin-bottom: 6px;
-    opacity: 0;
-    animation: lineIn 0.4s ease forwards;
-  }
-
+  .terminal-title { margin-left: 12px; font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .terminal-body { padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.8; min-height: 280px; }
+  .terminal-line { margin-bottom: 6px; opacity: 0; animation: lineIn 0.4s ease forwards; }
   .terminal-line.visible { opacity: 1; }
-
   .t-prompt { color: var(--teal); }
   .t-agent { color: var(--accent); font-weight: 500; }
   .t-system { color: var(--muted); }
   .t-success { color: #22C55E; }
   .t-goal { color: #C4B8FF; }
-  .t-cursor {
-    display: inline-block;
-    width: 8px;
-    height: 14px;
-    background: var(--teal);
-    margin-left: 2px;
-    vertical-align: middle;
-    animation: cursorBlink 1s step-end infinite;
-  }
+  .t-cursor { display: inline-block; width: 8px; height: 14px; background: var(--teal); margin-left: 2px; vertical-align: middle; animation: cursorBlink 1s step-end infinite; }
+  @keyframes lineIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes cursorBlink { 50% { opacity: 0; } }
 
-  @keyframes lineIn {
-    from { opacity: 0; transform: translateX(-8px); }
-    to { opacity: 1; transform: translateX(0); }
+  /* ── CTA banner ── */
+  .cta-banner {
+    background: linear-gradient(135deg, #1E1645, #14112A);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 60px 40px;
+    text-align: center;
+    margin: 0 5% 80px;
+    position: relative;
+    overflow: hidden;
   }
-
-  @keyframes cursorBlink {
-    50% { opacity: 0; }
+  .cta-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 60% at 50% 0%, var(--accent-glow), transparent);
+    pointer-events: none;
   }
+  .cta-banner h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; color: var(--white); margin-bottom: 16px; position: relative; }
+  .cta-banner p { color: var(--muted); margin-bottom: 32px; position: relative; }
+  .cta-banner .btn { position: relative; }
 
   /* ── Footer ── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 48px 5%;
-    text-align: center;
-    background: rgba(20, 17, 42, 0.5);
-  }
-
-  footer .tagline {
-    font-size: 1rem;
-    color: var(--muted);
-    margin-bottom: 20px;
-  }
-
-  footer .tagline em {
-    color: var(--text);
-    font-style: normal;
-  }
-
-  footer .links {
-    display: flex;
-    justify-content: center;
-    gap: 32px;
-    flex-wrap: wrap;
-  }
-
-  footer .links a {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--teal);
-    transition: color 0.2s;
-  }
-
+  footer { border-top: 1px solid var(--border); padding: 48px 5%; text-align: center; background: rgba(20, 17, 42, 0.5); }
+  footer .tagline { font-size: 1rem; color: var(--muted); margin-bottom: 20px; }
+  footer .tagline em { color: var(--text); font-style: normal; }
+  footer .links { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+  footer .links a { font-size: 0.9rem; font-weight: 600; color: var(--teal); transition: color 0.2s; }
   footer .links a:hover { color: var(--white); }
-
-  footer .copy {
-    margin-top: 24px;
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
+  footer .copy { margin-top: 24px; font-size: 0.8rem; color: var(--muted); }
 
   /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    .steps { grid-template-columns: repeat(2, 1fr); }
+    .step:not(:last-child)::after { display: none; }
+    .builder-showcase { grid-template-columns: 1fr; }
+  }
   @media (max-width: 900px) {
-    .steps,
-    .features-grid,
-    .pricing-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .price-card.featured {
-      transform: none;
-      order: -1;
-    }
-
+    .features-grid, .pricing-grid, .usecases { grid-template-columns: 1fr; }
+    .price-card.featured { transform: none; order: -1; }
     nav { display: none; }
     nav.open {
-      display: flex;
-      flex-direction: column;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: var(--bg-elevated);
-      padding: 24px;
-      border-bottom: 1px solid var(--border);
-      gap: 20px;
+      display: flex; flex-direction: column;
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--bg-elevated); padding: 24px;
+      border-bottom: 1px solid var(--border); gap: 20px;
     }
-
     .nav-toggle { display: block; }
     .header-cta { display: none; }
-    nav.open + .header-cta,
-    .header-actions.open .header-cta {
-      display: flex;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: relative;
-    }
   }
-
   @media (max-width: 600px) {
+    .steps { grid-template-columns: 1fr; }
     .hero-buttons { flex-direction: column; width: 100%; max-width: 280px; }
     .hero-buttons .btn { width: 100%; }
+    .hero-preview { padding: 16px; }
   }
 </style>
 </head>
@@ -652,63 +399,70 @@
 <div class="wrap">
 
   <header id="header">
-    <a href="#" class="logo">
-      <span>🤖</span>
-      <span>AgentOS</span>
-    </a>
+    <a href="#" class="logo"><span>🤖</span><span>AgentOS</span></a>
     <div class="header-actions" id="headerActions">
       <nav id="nav">
+        <a href="#how">How it works</a>
         <a href="#features">Features</a>
+        <a href="#usecases">Use Cases</a>
         <a href="#pricing">Pricing</a>
-        <a href="http://localhost:8000/docs" target="_blank" rel="noopener">Docs</a>
-        <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs" target="_blank" rel="noopener">Docs</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
-      <a href="index.html" class="btn btn-primary header-cta">Get Started Free</a>
+      <a href="/pipeline" class="btn btn-primary header-cta">Build Free →</a>
     </div>
   </header>
 
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">Now in public beta</div>
-    <h1>The Operating System for <span class="gradient">AI Agents</span></h1>
+    <div class="hero-badge">No-code AI workflow builder — now in public beta</div>
+    <h1>Build <span class="gradient">AI Agent Pipelines</span> Without Writing Code</h1>
     <p class="sub">
-      Let multiple AI agents collaborate, share memory, and work as a team to complete any goal.
-      Built for developers. Powered by LLMs.
+      Create custom AI agents, chain them together, and run any workflow — research, writing, code review, analysis — in minutes. Like Zapier, but for AI agents.
     </p>
     <div class="hero-buttons">
-      <a href="index.html" class="btn btn-primary">Try Free</a>
-      <a href="http://localhost:8000/docs" class="btn btn-secondary" target="_blank" rel="noopener">View Docs</a>
+      <a href="/pipeline" class="btn btn-teal">🔗 Open Pipeline Builder</a>
+      <a href="#how" class="btn btn-secondary">See how it works</a>
     </div>
-    <div class="hero-stats" id="heroStats">
-      <span class="stat-item"><span class="highlight">5</span> Agents</span>
-      <span class="dot">•</span>
-      <span class="stat-item"><span class="highlight">Real-time</span></span>
-      <span class="dot">•</span>
-      <span class="stat-item"><span class="highlight">Zero Setup</span></span>
+
+    <!-- Pipeline preview -->
+    <div class="hero-preview">
+      <div class="pipeline-chip"><span class="dot"></span> Your Agent</div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-chip"><span class="dot"></span> Your Agent</div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-chip"><span class="dot"></span> Your Agent</div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-chip custom">✨ Any Goal</div>
     </div>
+    <p class="hero-preview-label">Define any agents. Chain them. Run on any goal.</p>
   </section>
 
   <!-- How it works -->
   <section id="how">
     <p class="section-label">How it works</p>
-    <h2 class="section-title">From goal to result in three steps</h2>
-    <p class="section-desc">No complex workflows. Just describe what you want and let AgentOS handle the rest.</p>
+    <h2 class="section-title">From idea to running pipeline in 4 steps</h2>
+    <p class="section-desc">No code. No config files. Just describe what each agent does and chain them together.</p>
     <div class="steps">
       <div class="step">
+        <div class="step-num">✍️</div>
+        <h3>Define Your Agents</h3>
+        <p>Give each agent a name and instructions. "You are a legal expert. Summarize contracts clearly."</p>
+      </div>
+      <div class="step">
+        <div class="step-num">🔗</div>
+        <h3>Build Your Pipeline</h3>
+        <p>Set the order. Each agent's output automatically feeds into the next one as context.</p>
+      </div>
+      <div class="step">
         <div class="step-num">🎯</div>
-        <h3>Submit a Goal</h3>
-        <p>Type any goal in plain English. Research reports, summaries, analysis — anything.</p>
+        <h3>Submit Any Goal</h3>
+        <p>Type what you want to accomplish. The pipeline handles the rest — no prompting skills needed.</p>
       </div>
       <div class="step">
-        <div class="step-num">🤖</div>
-        <h3>Agents Collaborate</h3>
-        <p>5 specialized agents — Planner, Research, Writer, Fact-checker, and Editor — work together.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">✅</div>
+        <div class="step-num">⚡</div>
         <h3>Get Results</h3>
-        <p>Polished output in seconds. Every step tracked, every result saved to shared memory.</p>
+        <p>Watch agents work live. See each step's output and copy the final result instantly.</p>
       </div>
     </div>
   </section>
@@ -716,23 +470,143 @@
   <!-- Features -->
   <section id="features">
     <p class="section-label">Features</p>
-    <h2 class="section-title">Built for agent teams</h2>
-    <p class="section-desc">Everything you need to run multi-agent workflows without building infrastructure from scratch.</p>
+    <h2 class="section-title">Everything you need to run AI workflows</h2>
+    <p class="section-desc">Built from scratch — no wrappers, no black boxes. You control every agent.</p>
     <div class="features-grid">
+      <div class="feature-card highlight">
+        <div class="feature-icon">🔗</div>
+        <h3>Pipeline Builder <span class="feature-new">NEW</span></h3>
+        <p>Create custom AI agents with any role and chain them in any order. Your pipeline, your rules. No code required.</p>
+      </div>
       <div class="feature-card">
         <div class="feature-icon">🧠</div>
         <h3>Shared Memory</h3>
-        <p>Agents remember everything. Short-term context and long-term knowledge persist across tasks and restarts.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔗</div>
-        <h3>Task Orchestration</h3>
-        <p>Automatic task breakdown and assignment. The orchestrator plans, delegates, and retries until the job is done.</p>
+        <p>Agents pass context to each other automatically. Each agent builds on the previous one's output for richer results.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">⚡</div>
-        <h3>Real-time Updates</h3>
-        <p>Watch agents work live on the dashboard. See planning, execution, and completion as it happens.</p>
+        <h3>Real-time Live Feed</h3>
+        <p>Watch your pipeline execute live. See each agent working, completing, and passing results forward in real time.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>Auto Retry</h3>
+        <p>Agents automatically retry on failure. Built-in error recovery ensures your pipeline always completes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <h3>REST API</h3>
+        <p>Every feature is available via API. Submit goals, create agents, and run pipelines programmatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <h3>Persistent Storage</h3>
+        <p>All tasks, agents, and results saved to SQLite. Your pipelines and history are always there when you return.</p>
+      </div>
+    </div>
+
+    <!-- Builder showcase -->
+    <div class="builder-showcase">
+      <div>
+        <h3>Build any workflow, visually</h3>
+        <p>The Pipeline Builder lets you create specialized AI agents for your exact use case. Add them in order, type your goal, and watch them collaborate.</p>
+        <div class="builder-steps">
+          <div class="builder-step">
+            <div class="builder-step-num">1</div>
+            <div class="builder-step-content">
+              <h4>Name your agent</h4>
+              <p>"SEO Analyst", "Code Reviewer", "Legal Summarizer" — anything</p>
+            </div>
+          </div>
+          <div class="builder-step">
+            <div class="builder-step-num">2</div>
+            <div class="builder-step-content">
+              <h4>Write its instructions</h4>
+              <p>"You are an expert at finding security vulnerabilities in Python code"</p>
+            </div>
+          </div>
+          <div class="builder-step">
+            <div class="builder-step-num">3</div>
+            <div class="builder-step-content">
+              <h4>Set the order & run</h4>
+              <p>Agents run in sequence, each building on the previous output</p>
+            </div>
+          </div>
+        </div>
+        <a href="/pipeline" class="btn btn-primary" style="margin-top:24px; display:inline-flex;">Open Builder →</a>
+      </div>
+      <div class="mini-pipeline">
+        <div class="mini-pipeline-title">Your Custom Pipeline</div>
+        <div class="mini-agent done">
+          <span class="mini-agent-icon">🔍</span>
+          <div class="mini-agent-info">
+            <div class="mini-agent-name">SecurityReviewer</div>
+            <div class="mini-agent-role">Find vulnerabilities</div>
+          </div>
+          <span class="mini-badge mini-badge-done">✓ done</span>
+        </div>
+        <div class="mini-connector">↓</div>
+        <div class="mini-agent active">
+          <span class="mini-agent-icon">🛠️</span>
+          <div class="mini-agent-info">
+            <div class="mini-agent-name">FixSuggester</div>
+            <div class="mini-agent-role">Suggest fixes</div>
+          </div>
+          <span class="mini-badge mini-badge-run">running</span>
+        </div>
+        <div class="mini-connector">↓</div>
+        <div class="mini-agent">
+          <span class="mini-agent-icon">📝</span>
+          <div class="mini-agent-info">
+            <div class="mini-agent-name">ReportWriter</div>
+            <div class="mini-agent-role">Write final report</div>
+          </div>
+          <span class="mini-badge" style="background:var(--bg-elevated);color:var(--muted);">waiting</span>
+        </div>
+        <div class="mini-goal">
+          <div class="mini-goal-label">Goal</div>
+          Review this Python function for security issues and suggest fixes
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use cases -->
+  <section id="usecases">
+    <p class="section-label">Use Cases</p>
+    <h2 class="section-title">What will you build?</h2>
+    <p class="section-desc">Users are already building custom pipelines for all kinds of workflows.</p>
+    <div class="usecases">
+      <div class="usecase">
+        <div class="usecase-icon">💻</div>
+        <h4>Code Review Pipeline</h4>
+        <p>Automatically review code for bugs, security issues, and best practices — then generate a fix report.</p>
+        <div class="usecase-agents">
+          <span class="usecase-tag">BugFinder</span>
+          <span class="usecase-tag">SecurityChecker</span>
+          <span class="usecase-tag">ReportWriter</span>
+        </div>
+      </div>
+      <div class="usecase">
+        <div class="usecase-icon">📝</div>
+        <h4>Content Pipeline</h4>
+        <p>Research a topic, write a blog post, optimize for SEO, and polish the final draft — all in one run.</p>
+        <div class="usecase-agents">
+          <span class="usecase-tag">Researcher</span>
+          <span class="usecase-tag">Writer</span>
+          <span class="usecase-tag">SEOOptimizer</span>
+          <span class="usecase-tag">Editor</span>
+        </div>
+      </div>
+      <div class="usecase">
+        <div class="usecase-icon">⚖️</div>
+        <h4>Document Analysis</h4>
+        <p>Extract key clauses, identify risks, summarize in plain English — perfect for legal or financial docs.</p>
+        <div class="usecase-agents">
+          <span class="usecase-tag">Extractor</span>
+          <span class="usecase-tag">RiskAnalyzer</span>
+          <span class="usecase-tag">Summarizer</span>
+        </div>
       </div>
     </div>
   </section>
@@ -745,32 +619,35 @@
     <div class="pricing-grid">
       <div class="price-card">
         <div class="price-tier">Free</div>
-        <div class="price-amount">Rs 0 <span>/month</span></div>
+        <div class="price-amount">₹0 <span>/month</span></div>
         <ul class="price-features">
-          <li>5 tasks/day</li>
-          <li>3 agents</li>
-          <li>Basic memory</li>
+          <li>5 pipeline runs/day</li>
+          <li>Up to 3 custom agents</li>
+          <li>Live dashboard</li>
+          <li>API access</li>
         </ul>
-        <a href="index.html" class="btn btn-secondary">Get Started</a>
+        <a href="#" class="btn btn-secondary" onclick="openModal();return false;">Get Started Free</a>
       </div>
       <div class="price-card featured">
         <div class="price-tier">Pro</div>
-        <div class="price-amount">Rs 499 <span>/month</span></div>
+        <div class="price-amount">₹499 <span>/month</span></div>
         <ul class="price-features">
-          <li>Unlimited tasks</li>
-          <li>All 5 agents</li>
-          <li>Full memory</li>
+          <li>Unlimited pipeline runs</li>
+          <li>Unlimited custom agents</li>
+          <li>Save & reuse pipelines</li>
           <li>Priority speed</li>
+          <li>Full memory history</li>
         </ul>
-        <a href="index.html" class="btn btn-primary">Upgrade to Pro</a>
+        <a href="#" class="btn btn-primary" onclick="openModal();return false;">Upgrade to Pro</a>
       </div>
       <div class="price-card">
         <div class="price-tier">Team</div>
-        <div class="price-amount">Rs 1999 <span>/month</span></div>
+        <div class="price-amount">₹1999 <span>/month</span></div>
         <ul class="price-features">
           <li>Everything in Pro</li>
           <li>10 team members</li>
-          <li>API access</li>
+          <li>Shared pipelines</li>
+          <li>Priority support</li>
         </ul>
         <a href="mailto:hello@agentos.dev" class="btn btn-outline-teal">Contact Us</a>
       </div>
@@ -780,85 +657,107 @@
   <!-- Demo -->
   <div class="demo-section" id="demo">
     <p class="section-label">Live demo</p>
-    <h2 class="section-title">See agents in action</h2>
-    <p class="section-desc" style="margin-bottom: 40px;">A real orchestration run — from goal to finished report.</p>
+    <h2 class="section-title">Custom pipeline in action</h2>
+    <p class="section-desc" style="margin-bottom:40px;">A real pipeline run with 3 custom agents — from goal to finished output.</p>
     <div class="terminal">
       <div class="terminal-bar">
         <span class="terminal-dot red"></span>
         <span class="terminal-dot yellow"></span>
         <span class="terminal-dot green"></span>
-        <span class="terminal-title">agentos — orchestrator</span>
+        <span class="terminal-title">agentos — custom pipeline</span>
       </div>
       <div class="terminal-body" id="terminalBody">
-        <div class="terminal-line visible"><span class="t-prompt">$</span> <span class="t-goal">goal "Write a report on renewable energy in India"</span></div>
+        <div class="terminal-line visible"><span class="t-prompt">$</span> <span class="t-goal">run-pipeline --goal "Review this Python code for security issues"</span></div>
       </div>
+    </div>
+  </div>
+
+  <!-- CTA Banner -->
+  <div class="cta-banner">
+    <h2>Ready to build your first pipeline?</h2>
+    <p>Free to start. No credit card. No code required.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="/pipeline" class="btn btn-teal">🔗 Open Pipeline Builder</a>
+      <a href="#" class="btn btn-secondary" onclick="openModal();return false;">Create Free Account</a>
     </div>
   </div>
 
   <!-- Footer -->
   <footer>
-    <p class="tagline">Built from a <em>college dorm</em> — shipping the future of multi-agent AI.</p>
+    <p class="tagline">Built from a <em>college dorm</em> — shipping the future of no-code AI workflows.</p>
     <div class="links">
-      <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
-      <a href="http://localhost:8000/docs" target="_blank" rel="noopener">API Docs</a>
+      <a href="https://github.com/utkarsh4964-stack/agentos" target="_blank" rel="noopener">GitHub</a>
+      <a href="/docs" target="_blank" rel="noopener">API Docs</a>
+      <a href="/pipeline">Pipeline Builder</a>
+      <a href="/dashboard">Dashboard</a>
     </div>
     <p class="copy">© 2026 AgentOS. All rights reserved.</p>
   </footer>
 
 </div>
 
+<!-- Signup Modal (unchanged from original) -->
+<div id="signupModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+  <div style="background:#14112A; border:1px solid #6C47FF; border-radius:16px; padding:40px; width:90%; max-width:400px; position:relative;">
+    <button onclick="closeModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#888; font-size:20px; cursor:pointer;">✕</button>
+    <div id="signupForm">
+      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Create Account</h2>
+      <p style="color:#888; margin-bottom:24px;">Start with 5 free pipeline runs per day</p>
+      <input id="signupEmail" type="email" placeholder="your@email.com" style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <input id="signupPassword" type="password" placeholder="Password (min 6 chars)" style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <p id="signupError" style="color:#EF4444; font-size:13px; margin-bottom:12px; display:none;"></p>
+      <button onclick="doSignup()" style="width:100%; padding:14px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer;">Create Free Account</button>
+      <p style="color:#888; font-size:12px; text-align:center; margin-top:12px;">Already have an account? <span onclick="showLogin()" style="color:#6C47FF; cursor:pointer;">Log in</span></p>
+    </div>
+    <div id="loginForm" style="display:none;">
+      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Welcome Back</h2>
+      <p style="color:#888; margin-bottom:24px;">Log in to your AgentOS account</p>
+      <input id="loginEmail" type="email" placeholder="your@email.com" style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <input id="loginPassword" type="password" placeholder="Password" style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
+      <p id="loginError" style="color:#EF4444; font-size:13px; margin-bottom:12px; display:none;"></p>
+      <button onclick="doLogin()" style="width:100%; padding:14px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer;">Log In</button>
+      <p style="color:#888; font-size:12px; text-align:center; margin-top:12px;">No account? <span onclick="showSignup()" style="color:#6C47FF; cursor:pointer;">Sign up free</span></p>
+    </div>
+    <div id="successScreen" style="display:none; text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;">🎉</div>
+      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Account Created!</h2>
+      <p style="color:#888; margin-bottom:24px;">Your API key:</p>
+      <div style="background:#0A0918; border:1px solid #6C47FF; border-radius:8px; padding:16px; margin-bottom:16px;">
+        <p id="apiKeyDisplay" style="color:#00C4A1; font-family:monospace; font-size:13px; word-break:break-all;"></p>
+      </div>
+      <button onclick="copyApiKey()" style="width:100%; padding:12px; background:#00C4A1; color:#0A0918; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px;">Copy API Key</button>
+      <p style="color:#888; font-size:12px;">Save this key — you'll need it in the Pipeline Builder.</p>
+      <button onclick="goToDashboard()" style="width:100%; padding:12px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; margin-top:12px;">Open Pipeline Builder →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
-  // Header scroll effect
   const header = document.getElementById('header');
-  window.addEventListener('scroll', function () {
-    header.classList.toggle('scrolled', window.scrollY > 20);
-  });
+  window.addEventListener('scroll', function () { header.classList.toggle('scrolled', window.scrollY > 20); });
 
-  // Mobile nav
   const navToggle = document.getElementById('navToggle');
   const nav = document.getElementById('nav');
   const headerActions = document.getElementById('headerActions');
   if (navToggle) {
-    navToggle.addEventListener('click', function () {
-      nav.classList.toggle('open');
-      headerActions.classList.toggle('open');
-    });
+    navToggle.addEventListener('click', function () { nav.classList.toggle('open'); headerActions.classList.toggle('open'); });
   }
 
-  // Animated hero stats cycle
-  const statsEl = document.getElementById('heroStats');
-  const statSets = [
-    ['<span class="highlight">5</span> Agents', 'Real-time', 'Zero Setup'],
-    ['<span class="highlight">∞</span> Goals', 'Shared Memory', 'SQLite-backed'],
-    ['<span class="highlight">1</span> API', 'FastAPI', 'Open Source']
-  ];
-  let statIdx = 0;
-  setInterval(function () {
-    statIdx = (statIdx + 1) % statSets.length;
-    const parts = statSets[statIdx];
-    statsEl.innerHTML = parts.map(function (p, i) {
-      const isHighlight = p.includes('highlight');
-      const cls = isHighlight ? 'stat-item' : 'stat-item';
-      const sep = i < parts.length - 1 ? '<span class="dot">•</span>' : '';
-      const content = isHighlight ? p : '<span class="highlight">' + p + '</span>';
-      return (i > 0 ? sep : '') + '<span class="' + cls + '">' + content + '</span>';
-    }).join('');
-  }, 4000);
-
-  // Terminal demo animation
+  // Terminal demo
   const lines = [
-    { html: '<span class="t-system">[Orchestrator]</span> Planning: Write a report on renewable energy in India', delay: 800 },
-    { html: '<span class="t-agent">PlannerAgent</span> → 4 subtasks created', delay: 1200 },
-    { html: '<span class="t-agent">ResearchAgent</span> ▶ Gathering key facts on solar, wind, hydro...', delay: 1400 },
-    { html: '<span class="t-agent">ResearchAgent</span> <span class="t-success">✓ Done</span>', delay: 1000 },
-    { html: '<span class="t-agent">WriterAgent</span> ▶ Drafting comprehensive report...', delay: 1300 },
-    { html: '<span class="t-agent">WriterAgent</span> <span class="t-success">✓ Done</span>', delay: 900 },
-    { html: '<span class="t-agent">FactCheckerAgent</span> ▶ Verifying claims...', delay: 1100 },
-    { html: '<span class="t-agent">FactCheckerAgent</span> <span class="t-success">✓ Done</span>', delay: 800 },
-    { html: '<span class="t-agent">EditorAgent</span> ▶ Polishing final output...', delay: 1000 },
-    { html: '<span class="t-agent">EditorAgent</span> <span class="t-success">✓ Done</span>', delay: 700 },
-    { html: '<span class="t-success">[Orchestrator] ✅ Task COMPLETE</span> — saved to agentos.db', delay: 600 },
+    { html: '<span class="t-system">[AgentOS]</span> Loading custom pipeline: SecurityReviewer → FixSuggester → ReportWriter', delay: 800 },
+    { html: '<span class="t-agent">SecurityReviewer</span> ▶ Scanning for vulnerabilities...', delay: 1200 },
+    { html: '<span class="t-system">  → Found: SQL injection risk on line 42</span>', delay: 800 },
+    { html: '<span class="t-system">  → Found: Unvalidated user input on line 67</span>', delay: 600 },
+    { html: '<span class="t-agent">SecurityReviewer</span> <span class="t-success">✓ Done — 2 issues found</span>', delay: 700 },
+    { html: '<span class="t-agent">FixSuggester</span> ▶ Generating fixes for each issue...', delay: 1100 },
+    { html: '<span class="t-system">  → Parameterized query fix for line 42</span>', delay: 700 },
+    { html: '<span class="t-system">  → Input sanitization fix for line 67</span>', delay: 600 },
+    { html: '<span class="t-agent">FixSuggester</span> <span class="t-success">✓ Done — 2 fixes generated</span>', delay: 800 },
+    { html: '<span class="t-agent">ReportWriter</span> ▶ Writing security report...', delay: 1000 },
+    { html: '<span class="t-agent">ReportWriter</span> <span class="t-success">✓ Done — report ready</span>', delay: 700 },
+    { html: '<span class="t-success">[AgentOS] ✅ Pipeline complete</span> — 3 agents, ~18 seconds', delay: 500 },
     { html: '<span class="t-prompt">$</span> <span class="t-cursor"></span>', delay: 0 }
   ];
 
@@ -870,7 +769,6 @@
     if (demoRunning) return;
     demoRunning = true;
     lineIndex = 0;
-    // Keep first line, clear rest
     const first = terminalBody.querySelector('.terminal-line');
     terminalBody.innerHTML = '';
     if (first) terminalBody.appendChild(first);
@@ -879,7 +777,7 @@
       if (lineIndex >= lines.length) {
         demoRunning = false;
         setTimeout(function () {
-          terminalBody.innerHTML = '<div class="terminal-line visible"><span class="t-prompt">$</span> <span class="t-goal">goal "Write a report on renewable energy in India"</span></div>';
+          terminalBody.innerHTML = '<div class="terminal-line visible"><span class="t-prompt">$</span> <span class="t-goal">run-pipeline --goal "Review this Python code for security issues"</span></div>';
           lineIndex = 0;
           setTimeout(runDemo, 2500);
         }, 3000);
@@ -891,159 +789,53 @@
       div.innerHTML = item.html;
       div.style.animationDelay = '0s';
       terminalBody.appendChild(div);
-      requestAnimationFrame(function () {
-        div.classList.add('visible');
-      });
+      requestAnimationFrame(function () { div.classList.add('visible'); });
       terminalBody.scrollTop = terminalBody.scrollHeight;
       lineIndex++;
       setTimeout(addNext, item.delay);
     }
-
     setTimeout(addNext, 1500);
   }
 
-  // Start demo when section is visible
   const demoObs = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) {
-        runDemo();
-        demoObs.disconnect();
-      }
-    });
+    entries.forEach(function (e) { if (e.isIntersecting) { runDemo(); demoObs.disconnect(); } });
   }, { threshold: 0.3 });
-
   const demoSection = document.getElementById('demo');
   if (demoSection) demoObs.observe(demoSection);
 
-  // Smooth scroll for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(function (a) {
     a.addEventListener('click', function (e) {
       const id = a.getAttribute('href');
       if (id === '#') return;
       const el = document.querySelector(id);
-      if (el) {
-        e.preventDefault();
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        nav.classList.remove('open');
-        headerActions.classList.remove('open');
-      }
+      if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); nav.classList.remove('open'); headerActions.classList.remove('open'); }
     });
   });
 })();
-</script>
-<!-- Signup Modal -->
-<div id="signupModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
-  <div style="background:#14112A; border:1px solid #6C47FF; border-radius:16px; padding:40px; width:90%; max-width:400px; position:relative;">
-    <button onclick="closeModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#888; font-size:20px; cursor:pointer;">✕</button>
 
-    <!-- Signup Form -->
-    <div id="signupForm">
-      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Create Account</h2>
-      <p style="color:#888; margin-bottom:24px;">Start with 5 free tasks per day</p>
-      <input id="signupEmail" type="email" placeholder="your@email.com"
-        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
-      <input id="signupPassword" type="password" placeholder="Password (min 6 chars)"
-        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
-      <p id="signupError" style="color:#EF4444; font-size:13px; margin-bottom:12px; display:none;"></p>
-      <button onclick="doSignup()"
-        style="width:100%; padding:14px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer;">
-        Create Free Account
-      </button>
-      <p style="color:#888; font-size:12px; text-align:center; margin-top:12px;">
-        Already have an account?
-        <span onclick="showLogin()" style="color:#6C47FF; cursor:pointer;">Log in</span>
-      </p>
-    </div>
-
-    <!-- Login Form -->
-    <div id="loginForm" style="display:none;">
-      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Welcome Back</h2>
-      <p style="color:#888; margin-bottom:24px;">Log in to your AgentOS account</p>
-      <input id="loginEmail" type="email" placeholder="your@email.com"
-        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
-      <input id="loginPassword" type="password" placeholder="Password"
-        style="width:100%; padding:12px; background:#0A0918; border:1px solid #2A2550; border-radius:8px; color:white; margin-bottom:12px; font-size:14px; outline:none;">
-      <p id="loginError" style="color:#EF4444; font-size:13px; margin-bottom:12px; display:none;"></p>
-      <button onclick="doLogin()"
-        style="width:100%; padding:14px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:16px; font-weight:700; cursor:pointer;">
-        Log In
-      </button>
-      <p style="color:#888; font-size:12px; text-align:center; margin-top:12px;">
-        No account?
-        <span onclick="showSignup()" style="color:#6C47FF; cursor:pointer;">Sign up free</span>
-      </p>
-    </div>
-
-    <!-- Success Screen -->
-    <div id="successScreen" style="display:none; text-align:center;">
-      <div style="font-size:48px; margin-bottom:16px;">🎉</div>
-      <h2 style="color:white; font-size:24px; margin-bottom:8px;">Account Created!</h2>
-      <p style="color:#888; margin-bottom:24px;">Here is your API key</p>
-      <div style="background:#0A0918; border:1px solid #6C47FF; border-radius:8px; padding:16px; margin-bottom:16px;">
-        <p id="apiKeyDisplay" style="color:#00C4A1; font-family:monospace; font-size:13px; word-break:break-all;"></p>
-      </div>
-      <button onclick="copyApiKey()"
-        style="width:100%; padding:12px; background:#00C4A1; color:#0A0918; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px;">
-        Copy API Key
-      </button>
-      <p style="color:#888; font-size:12px;">Save this key. You'll need it to use the API.</p>
-      <button onclick="goToDashboard()"
-        style="width:100%; padding:12px; background:#6C47FF; color:white; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; margin-top:12px;">
-        Go to Dashboard →
-      </button>
-    </div>
-  </div>
-</div>
-
-<script>
 const API = window.location.origin;
 let currentApiKey = "";
 
-function openModal() {
-  document.getElementById("signupModal").style.display = "flex";
-}
-function closeModal() {
-  document.getElementById("signupModal").style.display = "none";
-}
-function showLogin() {
-  document.getElementById("signupForm").style.display = "none";
-  document.getElementById("loginForm").style.display = "block";
-}
-function showSignup() {
-  document.getElementById("loginForm").style.display = "none";
-  document.getElementById("signupForm").style.display = "block";
-}
+function openModal() { document.getElementById("signupModal").style.display = "flex"; }
+function closeModal() { document.getElementById("signupModal").style.display = "none"; }
+function showLogin() { document.getElementById("signupForm").style.display = "none"; document.getElementById("loginForm").style.display = "block"; }
+function showSignup() { document.getElementById("loginForm").style.display = "none"; document.getElementById("signupForm").style.display = "block"; }
 
 async function doSignup() {
   const email = document.getElementById("signupEmail").value;
   const password = document.getElementById("signupPassword").value;
   const errEl = document.getElementById("signupError");
   errEl.style.display = "none";
-  if (!email || !password) {
-    errEl.textContent = "Please fill in all fields";
-    errEl.style.display = "block";
-    return;
-  }
+  if (!email || !password) { errEl.textContent = "Please fill in all fields"; errEl.style.display = "block"; return; }
   try {
-    const r = await fetch(`${API}/auth/signup`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({email, password})
-    });
+    const r = await fetch(`${API}/auth/signup`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({email, password}) });
     const data = await r.json();
-    if (!r.ok) {
-      errEl.textContent = data.detail || "Signup failed";
-      errEl.style.display = "block";
-      return;
-    }
+    if (!r.ok) { errEl.textContent = data.detail || "Signup failed"; errEl.style.display = "block"; return; }
     currentApiKey = data.api_key;
     document.getElementById("apiKeyDisplay").textContent = data.api_key;
     document.getElementById("signupForm").style.display = "none";
     document.getElementById("successScreen").style.display = "block";
-  } catch(e) {
-    errEl.textContent = "Connection error. Is the server running?";
-    errEl.style.display = "block";
-  }
+  } catch(e) { errEl.textContent = "Connection error. Is the server running?"; errEl.style.display = "block"; }
 }
 
 async function doLogin() {
@@ -1052,51 +844,18 @@ async function doLogin() {
   const errEl = document.getElementById("loginError");
   errEl.style.display = "none";
   try {
-    const r = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({email, password})
-    });
+    const r = await fetch(`${API}/auth/login`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({email, password}) });
     const data = await r.json();
-    if (!r.ok) {
-      errEl.textContent = data.detail || "Login failed";
-      errEl.style.display = "block";
-      return;
-    }
+    if (!r.ok) { errEl.textContent = data.detail || "Login failed"; errEl.style.display = "block"; return; }
     currentApiKey = data.api_key;
     document.getElementById("apiKeyDisplay").textContent = data.api_key;
     document.getElementById("loginForm").style.display = "none";
     document.getElementById("successScreen").style.display = "block";
-  } catch(e) {
-    errEl.textContent = "Connection error.";
-    errEl.style.display = "block";
-  }
+  } catch(e) { errEl.textContent = "Connection error."; errEl.style.display = "block"; }
 }
 
-function copyApiKey() {
-  navigator.clipboard.writeText(currentApiKey);
-  event.target.textContent = "Copied! ✓";
-  setTimeout(() => event.target.textContent = "Copy API Key", 2000);
-}
-
-function goToDashboard() {
-  localStorage.setItem("agos_api_key", currentApiKey);
-  window.location.href = "/account";
-}
-
-// Wire up all "Get Started" buttons
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("button, a").forEach(el => {
-    if (el.textContent.includes("Get Started") ||
-        el.textContent.includes("Try Free") ||
-        el.textContent.includes("Upgrade to Pro")) {
-      el.addEventListener("click", (e) => {
-        e.preventDefault();
-        openModal();
-      });
-    }
-  });
-});
+function copyApiKey() { navigator.clipboard.writeText(currentApiKey); event.target.textContent = "Copied! ✓"; setTimeout(() => event.target.textContent = "Copy API Key", 2000); }
+function goToDashboard() { localStorage.setItem("agos_api_key", currentApiKey); window.location.href = "/pipeline"; }
 </script>
 </body>
 </html>
