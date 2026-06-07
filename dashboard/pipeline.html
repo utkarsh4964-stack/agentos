@@ -1,691 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentOS — Pipeline Builder</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #070810;
-    --surface: #0E1120;
-    --card: #131627;
-    --border: #1E2340;
-    --border-bright: #2E3460;
-    --accent: #4F6EF7;
-    --accent-glow: rgba(79,110,247,0.15);
-    --teal: #00E5C4;
-    --teal-glow: rgba(0,229,196,0.12);
-    --orange: #FF7043;
-    --text: #E2E8FF;
-    --muted: #5A6080;
-    --muted2: #8890B0;
-    --green: #00C896;
-    --red: #FF4560;
-    --yellow: #FFB830;
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-display: 'Syne', sans-serif;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-display);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(79,110,247,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(79,110,247,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(7,8,16,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 28px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-  .logo-text { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.5px; }
-  .logo-badge { font-size: 10px; font-family: var(--font-mono); background: var(--teal-glow); border: 1px solid var(--teal); color: var(--teal); padding: 2px 8px; border-radius: 4px; }
-
-  nav { display: flex; gap: 4px; margin-left: 24px; }
-  nav a { font-size: 13px; font-weight: 600; color: var(--muted2); text-decoration: none; padding: 6px 14px; border-radius: 6px; transition: all 0.2s; }
-  nav a:hover { color: var(--text); background: var(--card); }
-  nav a.active { color: var(--accent); background: var(--accent-glow); }
-
-  .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-
-  .api-key-wrap { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
-  .api-key-wrap label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
-  .api-key-wrap input { background: none; border: none; outline: none; color: var(--teal); font-family: var(--font-mono); font-size: 12px; width: 180px; }
-
-  .page { position: relative; z-index: 1; display: grid; grid-template-columns: 380px 1fr; gap: 0; height: calc(100vh - 56px); }
-
-  .left-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-
-  .panel-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  .panel-title { font-size: 13px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 1.5px; }
-
-  /* Templates button */
-  .templates-btn {
-    font-size: 11px; font-family: var(--font-mono); background: var(--teal-glow);
-    border: 1px solid var(--teal); color: var(--teal); padding: 4px 10px;
-    border-radius: 5px; cursor: pointer; text-decoration: none;
-    transition: all .2s;
-  }
-  .templates-btn:hover { background: rgba(0,229,196,0.2); }
-
-  .agent-form { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
-
-  .form-row { display: flex; flex-direction: column; gap: 6px; }
-  .form-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); }
-
-  .form-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-family: var(--font-display); outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%; }
-  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-  .form-input::placeholder { color: var(--muted); }
-  textarea.form-input { resize: none; height: 80px; line-height: 1.5; }
-  .form-row-2 { display: grid; grid-template-columns: 1fr 80px; gap: 10px; }
-
-  .btn { border: none; border-radius: 8px; font-family: var(--font-display); font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .btn-primary { background: var(--accent); color: white; padding: 11px 20px; font-size: 13px; width: 100%; }
-  .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  .btn-clear { background: transparent; border: 1px solid var(--border); color: var(--red); padding: 6px 12px; font-size: 11px; border-radius: 5px; cursor: pointer; font-family: var(--font-mono); }
-  .btn-clear:hover { background: rgba(255,69,96,0.1); border-color: var(--red); }
-
-  .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--red); padding: 4px 10px; font-size: 11px; border-radius: 5px; }
-  .btn-danger:hover { background: rgba(255,69,96,0.1); border-color: var(--red); }
-
-  .pipeline-list { flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 8px; }
-
-  .pipeline-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
-  .pipeline-empty .empty-icon { font-size: 32px; margin-bottom: 12px; }
-
-  /* Template loaded banner */
-  .template-banner {
-    background: rgba(0,229,196,0.08);
-    border: 1px solid var(--teal);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 12px;
-    color: var(--teal);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-family: var(--font-mono);
-  }
-
-  .agent-pill { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; position: relative; animation: slideIn 0.3s ease; }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-  .agent-pill:hover { border-color: var(--border-bright); }
-  .agent-pill.running { border-color: var(--accent); background: rgba(79,110,247,0.05); }
-  .agent-pill.done { border-color: var(--green); background: rgba(0,200,150,0.05); }
-  .agent-pill.failed { border-color: var(--red); }
-
-  .agent-order-badge { width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-mono); color: var(--muted2); flex-shrink: 0; }
-  .agent-pill.running .agent-order-badge { background: var(--accent); color: white; border-color: var(--accent); }
-  .agent-pill.done .agent-order-badge { background: var(--green); color: #000; border-color: var(--green); }
-
-  .agent-pill-info { flex: 1; min-width: 0; }
-  .agent-pill-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
-  .agent-pill-role { font-size: 11px; color: var(--muted2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-mono); }
-
-  .agent-status-indicator { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); flex-shrink: 0; }
-  .status-idle { background: var(--surface); color: var(--muted); }
-  .status-running { background: rgba(79,110,247,0.2); color: var(--accent); animation: pulse 1s infinite; }
-  .status-done { background: rgba(0,200,150,0.15); color: var(--green); }
-  .status-failed { background: rgba(255,69,96,0.15); color: var(--red); }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-
-  .connector { display: flex; justify-content: center; align-items: center; height: 16px; color: var(--border-bright); font-size: 14px; }
-
-  .right-panel { display: flex; flex-direction: column; overflow: hidden; }
-
-  .run-bar { padding: 16px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
-
-  .goal-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; color: var(--text); font-size: 14px; font-family: var(--font-display); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-  .goal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-  .goal-input::placeholder { color: var(--muted); }
-
-  .btn-run { background: linear-gradient(135deg, var(--accent), #7B5CF5); color: white; border: none; border-radius: 10px; padding: 12px 28px; font-size: 14px; font-weight: 800; font-family: var(--font-display); cursor: pointer; transition: all 0.2s; white-space: nowrap; letter-spacing: 0.3px; position: relative; overflow: hidden; }
-  .btn-run::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); opacity: 0; transition: opacity 0.2s; }
-  .btn-run:hover::before { opacity: 1; }
-  .btn-run:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(79,110,247,0.35); }
-  .btn-run:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
-
-  .progress-track { height: 2px; background: var(--border); position: relative; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--teal)); transition: width 0.6s ease; position: relative; }
-  .progress-fill::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 60px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4)); animation: shimmer 1s infinite; }
-  @keyframes shimmer { 0%{opacity:0} 50%{opacity:1} 100%{opacity:0} }
-
-  .output-area { flex: 1; display: grid; grid-template-rows: 1fr 200px; overflow: hidden; }
-
-  .output-main { padding: 24px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-
-  .output-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; color: var(--muted); }
-  .output-placeholder .big-icon { font-size: 48px; opacity: 0.4; }
-  .output-placeholder p { font-size: 14px; }
-  .output-placeholder small { font-size: 12px; font-family: var(--font-mono); }
-
-  .step-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; animation: fadeUp 0.4s ease; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
-  .step-card-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .step-agent-name { font-size: 13px; font-weight: 700; color: var(--text); }
-  .step-badge { font-size: 10px; font-family: var(--font-mono); padding: 2px 8px; border-radius: 4px; margin-left: auto; }
-  .step-badge-done { background: rgba(0,200,150,0.15); color: var(--green); }
-  .step-badge-running { background: rgba(79,110,247,0.2); color: var(--accent); animation: pulse 1s infinite; }
-
-  .step-card-body { padding: 16px; font-size: 13px; line-height: 1.75; color: #B0BCDF; white-space: pre-wrap; font-family: var(--font-mono); max-height: 200px; overflow-y: auto; }
-
-  .final-output { background: linear-gradient(135deg, rgba(79,110,247,0.08), rgba(0,229,196,0.05)); border: 1px solid var(--accent); border-radius: 12px; padding: 20px; }
-  .final-output-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-mono); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-  .final-output-text { font-size: 14px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
-
-  .live-feed { border-top: 1px solid var(--border); background: var(--surface); padding: 12px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-  .feed-header { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-  .feed-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-  .feed-line { font-size: 11px; font-family: var(--font-mono); color: var(--muted2); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; gap: 10px; }
-  .feed-time { color: var(--muted); flex-shrink: 0; }
-  .feed-msg { color: var(--muted2); }
-  .feed-msg.success { color: var(--green); }
-  .feed-msg.info { color: var(--accent); }
-
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
-
-  .copy-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted2); padding: 4px 10px; border-radius: 5px; font-size: 11px; font-family: var(--font-mono); cursor: pointer; transition: all 0.2s; margin-left: auto; }
-  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .section-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-mono); padding: 0 0 8px 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
-
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; color: var(--text); z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.success { border-color: var(--green); }
-  .toast.error { border-color: var(--red); }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentOS — Pipeline Builder</title>
+  <style>
+    :root {
+      --bg:#0d0d0d;--surface:#141414;--border:#222;
+      --accent:#00ff88;--accent2:#00aaff;--text:#e8e8e8;--muted:#666;
+      --danger:#ff4444;--warning:#ffaa00;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;min-height:100vh}
+    nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+    .nav-brand{font-size:1.1rem;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px}
+    .nav-badge{font-size:0.65rem;color:var(--muted);border:1px solid var(--border);padding:2px 6px;border-radius:4px}
+    .nav-links{display:flex;gap:20px}
+    .nav-links a{color:var(--muted);text-decoration:none;font-size:0.85rem}
+    .nav-links a:hover{color:var(--accent)}
+    .ws-status{font-size:0.75rem;display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;border:1px solid var(--border)}
+    .ws-dot{width:8px;height:8px;border-radius:50%;background:var(--warning);animation:pulse 2s infinite}
+    .ws-dot.connected{background:var(--accent);animation:none}
+    .ws-dot.error{background:var(--danger);animation:none}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .layout{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 57px)}
+    .sidebar{border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+    .main{padding:20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px}
+    .card-title{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+    input,textarea{background:#0a0a0a;border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.85rem;padding:8px 12px;border-radius:6px;width:100%;outline:none;transition:border-color .2s;margin-bottom:8px}
+    input:focus,textarea:focus{border-color:var(--accent)}
+    textarea{resize:vertical;min-height:70px}
+    .btn{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:600;transition:all .2s}
+    .btn-primary{background:var(--accent);color:#000}
+    .btn-primary:hover{background:#00cc70}
+    .btn-secondary{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+    .btn-secondary:hover{background:rgba(0,255,136,.1)}
+    .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);font-size:.75rem;padding:5px 10px}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .pipeline-agent{display:flex;align-items:flex-start;gap:10px;padding:10px;background:#0a0a0a;border:1px solid var(--border);border-radius:6px;margin-bottom:8px}
+    .agent-num{min-width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+    .agent-info{flex:1;min-width:0}
+    .agent-name{font-size:.85rem;font-weight:600;color:var(--accent)}
+    .agent-instr{font-size:.75rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .agent-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:0 4px;line-height:1}
+    .agent-remove:hover{color:var(--danger)}
+    .pipeline-arrow{text-align:center;color:var(--muted);font-size:.75rem;margin:2px 0}
+    .feed{background:#060606;border:1px solid var(--border);border-radius:6px;padding:12px;height:260px;overflow-y:auto;font-size:.78rem;line-height:1.6}
+    .feed-line{margin-bottom:2px}
+    .ts{color:var(--muted)}
+    .agent-tag{color:var(--accent2)}
+    .ok{color:var(--accent)}
+    .err{color:var(--danger)}
+    .output-box{background:#060606;border:1px solid var(--border);border-radius:6px;padding:14px;min-height:140px;font-size:.83rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+    .key-row{display:flex;gap:8px;align-items:center;margin-bottom:0}
+    .key-label{font-size:.72rem;color:var(--muted);white-space:nowrap}
+    .key-row input{margin-bottom:0}
+    .spinner{width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--warning);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{color:var(--muted);font-size:.8rem;text-align:center;padding:20px}
+  </style>
 </head>
 <body>
 
-<header>
-  <a class="logo" href="/">
-    <div class="logo-icon">🤖</div>
-    <span class="logo-text">AgentOS</span>
-  </a>
-  <span class="logo-badge">PIPELINE BUILDER</span>
-  <nav>
-    <a href="/pipeline" class="active">Builder</a>
-    <a href="/templates">Templates</a>
-    <a href="/docs" target="_blank">API Docs</a>
-  </nav>
-  <div class="header-right">
-    <div class="api-key-wrap">
-      <label>API KEY</label>
-      <input type="password" id="apiKeyInput" placeholder="Enter your API key..." />
-    </div>
+<nav>
+  <div class="nav-brand">🤖 AgentOS <span class="nav-badge">PIPELINE BUILDER</span></div>
+  <div class="nav-links">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/pipeline">Builder</a>
+    <a href="/docs">API Docs</a>
   </div>
-</header>
+  <div class="ws-status">
+    <div class="ws-dot" id="wsDot"></div>
+    <span id="wsLabel">Connecting...</span>
+  </div>
+</nav>
 
-<div class="page">
+<div class="layout">
+  <div class="sidebar">
 
-  <!-- LEFT: Agent Builder -->
-  <div class="left-panel">
-
-    <div class="panel-header">
-      <span class="panel-title">Your Pipeline</span>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span id="agentCount" style="font-size:11px;font-family:var(--font-mono);color:var(--muted)">0 agents</span>
-        <button class="btn-clear" onclick="clearPipeline()">Clear</button>
-        <a href="/templates" class="templates-btn">📋 Templates</a>
+    <div class="card">
+      <div class="card-title">API KEY</div>
+      <div class="key-row">
+        <span class="key-label">KEY</span>
+        <input type="password" id="apiKey" placeholder="Your API key" style="margin-bottom:0" />
       </div>
     </div>
 
-    <!-- Form -->
-    <div class="agent-form">
-      <div class="section-label">Add Agent</div>
+    <div class="card">
+      <div class="card-title">Your Pipeline <span id="agentCount" style="color:var(--accent)">0 agents</span></div>
+      <input type="text" id="agentName" placeholder="Agent Name" />
+      <input type="number" id="agentOrder" placeholder="Order (1, 2, 3…)" min="1" />
+      <textarea id="agentInstr" placeholder="Instructions (what this agent does)" rows="3"></textarea>
+      <button class="btn btn-secondary" style="width:100%" onclick="addAgent()">+ Add to Pipeline</button>
 
-      <div class="form-row-2">
-        <div class="form-row">
-          <label class="form-label">Agent Name</label>
-          <input class="form-input" id="agentName" placeholder="e.g. Researcher" />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Order</label>
-          <input class="form-input" id="agentOrder" type="number" value="1" min="1" />
-        </div>
+      <div style="margin-top:16px">
+        <div class="card-title" style="margin-bottom:8px">Pipeline Order</div>
+        <div id="pipelineList"><div class="empty">No agents yet. Add your first agent above.</div></div>
       </div>
-
-      <div class="form-row">
-        <label class="form-label">Instructions (what this agent does)</label>
-        <textarea class="form-input" id="agentInstructions" placeholder="e.g. You are a research expert. Find key facts, statistics, and recent developments about the given topic. Be thorough and cite sources."></textarea>
-      </div>
-
-      <button class="btn btn-primary" onclick="addAgent()">
-        <span>+</span> Add to Pipeline
-      </button>
+      <button class="btn btn-danger" style="width:100%;margin-top:10px" onclick="clearPipeline()">🗑 Clear All</button>
     </div>
 
-    <!-- Pipeline list -->
-    <div class="pipeline-list" id="pipelineList">
-      <div class="pipeline-empty">
-        <div class="empty-icon">🔗</div>
-        <strong style="color:var(--muted2)">No agents yet</strong>
-        <p>Add agents above or <a href="/templates" style="color:var(--teal)">use a template</a> to get started.</p>
+    <div class="card">
+      <div class="card-title">Run Your Pipeline</div>
+      <input type="text" id="pipelineGoal" placeholder="Task / Goal" />
+      <button class="btn btn-primary" style="width:100%" id="runBtn" onclick="runPipeline()">▶ Run Pipeline</button>
+      <div id="runningRow" style="display:none;margin-top:8px;font-size:.8rem;color:var(--warning)">
+        <span class="spinner"></span> Running pipeline…
       </div>
     </div>
 
   </div>
 
-  <!-- RIGHT: Run + Output -->
-  <div class="right-panel">
+  <div class="main">
 
-    <div class="run-bar">
-      <input class="goal-input" id="goalInput" placeholder="Enter your goal… e.g. Write a blog post about the future of renewable energy" />
-      <button class="btn-run" id="runBtn" onclick="runPipeline()">▶ Run Pipeline</button>
-    </div>
-    <div class="progress-track">
-      <div class="progress-fill" id="progressFill" style="width:0%"></div>
-    </div>
-
-    <div class="output-area">
-      <div class="output-main" id="outputMain">
-        <div class="output-placeholder" id="outputPlaceholder">
-          <div class="big-icon">⚡</div>
-          <p>Build your pipeline, then run it</p>
-          <small>Each agent's output feeds into the next</small>
-        </div>
+    <div class="card">
+      <div class="card-title">⚡ Build your pipeline, then run it <span style="color:var(--muted);font-weight:normal">— Each agent's output feeds into the next</span></div>
+      <div id="pipelinePreview" style="display:flex;gap:12px;flex-wrap:wrap;min-height:60px;align-items:center">
+        <div class="empty" style="padding:10px">Add agents to see the pipeline here</div>
       </div>
+    </div>
 
-      <div class="live-feed" id="liveFeed">
-        <div class="feed-header">
-          <div class="feed-dot"></div>
-          Live Feed
-        </div>
-        <div class="feed-line">
-          <span class="feed-time">--:--:--</span>
-          <span class="feed-msg">AgentOS Pipeline Builder ready</span>
-        </div>
+    <div class="card">
+      <div class="card-title">Final Output <button class="btn btn-secondary" style="float:right;font-size:.72rem;padding:4px 10px" onclick="copyOutput()">copy</button></div>
+      <div class="output-box" id="outputBox">Configure your pipeline on the left, then run it here...</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Live Agent Feed</div>
+      <div class="feed" id="liveFeed">
+        <div class="feed-line"><span class="ts">--:--:--</span> AgentOS Pipeline Builder ready</div>
       </div>
     </div>
 
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <script>
-const API = window.location.origin;
-let agents = [];
-let isRunning = false;
+  // ─── Dynamic URLs (works on localhost and Railway) ────────────────────────
+  const BASE_URL = window.location.origin;
+  const WS_URL   = BASE_URL.replace(/^http/, 'ws') + '/ws/live';
 
-function getApiKey() {
-  return document.getElementById('apiKeyInput').value.trim() ||
-         localStorage.getItem('agos_api_key') || '';
-}
+  // ─── WebSocket ────────────────────────────────────────────────────────────
+  let ws = null;
 
-document.getElementById('apiKeyInput').addEventListener('change', e => {
-  localStorage.setItem('agos_api_key', e.target.value.trim());
-});
-
-window.addEventListener('load', () => {
-  // Load saved API key
-  const saved = localStorage.getItem('agos_api_key');
-  if (saved) document.getElementById('apiKeyInput').value = saved;
-
-  // ── Load template if one was selected ──────────────────────
-  const savedTemplate = localStorage.getItem('agos_template');
-  if (savedTemplate) {
+  function connectWS() {
+    const dot   = document.getElementById('wsDot');
+    const label = document.getElementById('wsLabel');
     try {
-      const template = JSON.parse(savedTemplate);
-      localStorage.removeItem('agos_template');
-
-      // Show banner
-      const list = document.getElementById('pipelineList');
-      const banner = document.createElement('div');
-      banner.className = 'template-banner';
-      banner.innerHTML = `✅ Template loaded: <strong>${template.name}</strong> <span style="cursor:pointer;opacity:.6" onclick="this.parentElement.remove()">✕</span>`;
-      list.prepend(banner);
-
-      // Load agents from template into local state
-      agents = template.agents.map((a, i) => ({
-        id: 'tmpl_' + i,
-        name: a.name,
-        instructions: a.instructions,
-        agent_order: a.order || i + 1
-      }));
-      agents.sort((a, b) => a.agent_order - b.agent_order);
-      renderPipeline();
-      showToast(`Template loaded: ${template.name}`, 'success');
-      addFeed(`📋 Template loaded: ${template.name}`, 'info');
-    } catch(e) {
-      localStorage.removeItem('agos_template');
+      ws = new WebSocket(WS_URL);
+      ws.onopen = () => {
+        dot.className = 'ws-dot connected';
+        label.textContent = 'Live';
+        feedLog('system', 'WebSocket connected ✓');
+      };
+      ws.onmessage = (e) => {
+        try { handleMsg(JSON.parse(e.data)); } catch { feedLog('system', e.data); }
+      };
+      ws.onclose = () => {
+        dot.className = 'ws-dot error';
+        label.textContent = 'Reconnecting…';
+        setTimeout(connectWS, 3000);
+      };
+      ws.onerror = () => {
+        dot.className = 'ws-dot error';
+        label.textContent = 'Error';
+      };
+    } catch(err) {
+      label.textContent = 'WS unavailable';
+      feedLog('system', 'WebSocket error: ' + err.message);
     }
-  } else {
-    loadAgents();
-  }
-});
-
-function showToast(msg, type = 'info') {
-  const t = document.getElementById('toast');
-  t.textContent = (type === 'success' ? '✅ ' : type === 'error' ? '❌ ' : 'ℹ️ ') + msg;
-  t.className = `toast show ${type}`;
-  setTimeout(() => t.className = 'toast', 3000);
-}
-
-function addFeed(msg, type = '') {
-  const feed = document.getElementById('liveFeed');
-  const time = new Date().toLocaleTimeString();
-  const line = document.createElement('div');
-  line.className = 'feed-line';
-  line.innerHTML = `<span class="feed-time">${time}</span><span class="feed-msg ${type}">${msg}</span>`;
-  feed.appendChild(line);
-  feed.scrollTop = feed.scrollHeight;
-}
-
-async function loadAgents() {
-  const key = getApiKey();
-  if (!key) return;
-  try {
-    const r = await fetch(`${API}/pipeline/agents`, {
-      headers: { 'x-api-key': key }
-    });
-    if (!r.ok) return;
-    const data = await r.json();
-    agents = data.agents || [];
-    renderPipeline();
-  } catch(e) {}
-}
-
-async function addAgent() {
-  const key = getApiKey();
-  if (!key) { showToast('Enter your API key first', 'error'); return; }
-
-  const name = document.getElementById('agentName').value.trim();
-  const instructions = document.getElementById('agentInstructions').value.trim();
-  const order = parseInt(document.getElementById('agentOrder').value) || agents.length + 1;
-
-  if (!name || !instructions) { showToast('Name and instructions are required', 'error'); return; }
-
-  try {
-    const r = await fetch(`${API}/pipeline/agents`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
-      body: JSON.stringify({ name, instructions, order })
-    });
-    if (!r.ok) throw new Error();
-    const data = await r.json();
-
-    agents.push({ id: data.agent_id, name, instructions, agent_order: order });
-    agents.sort((a, b) => a.agent_order - b.agent_order);
-    renderPipeline();
-
-    document.getElementById('agentName').value = '';
-    document.getElementById('agentInstructions').value = '';
-    document.getElementById('agentOrder').value = agents.length + 1;
-
-    showToast(`${name} added to pipeline`, 'success');
-    addFeed(`Agent added: ${name}`, 'info');
-  } catch(e) {
-    showToast('Failed to add agent', 'error');
-  }
-}
-
-async function deleteAgent(agentId, name) {
-  const key = getApiKey();
-  try {
-    if (!agentId.startsWith('tmpl_')) {
-      await fetch(`${API}/pipeline/agents/${agentId}`, {
-        method: 'DELETE',
-        headers: { 'x-api-key': key }
-      });
-    }
-    agents = agents.filter(a => a.id !== agentId);
-    renderPipeline();
-    showToast(`${name} removed`, 'info');
-    addFeed(`Agent removed: ${name}`);
-  } catch(e) {
-    showToast('Failed to delete agent', 'error');
-  }
-}
-
-function clearPipeline() {
-  agents = [];
-  renderPipeline();
-  showToast('Pipeline cleared', 'info');
-  addFeed('Pipeline cleared');
-}
-
-function renderPipeline() {
-  const list = document.getElementById('pipelineList');
-
-  // Keep banner if it exists
-  const banner = list.querySelector('.template-banner');
-
-  document.getElementById('agentCount').textContent = `${agents.length} agent${agents.length !== 1 ? 's' : ''}`;
-  document.getElementById('agentOrder').value = agents.length + 1;
-
-  if (!agents.length) {
-    list.innerHTML = `
-      <div class="pipeline-empty">
-        <div class="empty-icon">🔗</div>
-        <strong style="color:var(--muted2)">No agents yet</strong>
-        <p>Add agents above or <a href="/templates" style="color:var(--teal)">use a template</a> to get started.</p>
-      </div>`;
-    if (banner) list.prepend(banner);
-    return;
   }
 
-  list.innerHTML = agents.map((a, i) => `
-    ${i > 0 ? '<div class="connector">↓</div>' : ''}
-    <div class="agent-pill" id="pill-${a.id}">
-      <div class="agent-order-badge">${a.agent_order}</div>
-      <div class="agent-pill-info">
-        <div class="agent-pill-name">${a.name}</div>
-        <div class="agent-pill-role">${a.instructions.substring(0, 55)}${a.instructions.length > 55 ? '…' : ''}</div>
-      </div>
-      <span class="agent-status-indicator status-idle" id="status-${a.id}">idle</span>
-      <button class="btn-danger" onclick="deleteAgent('${a.id}', '${a.name}')">✕</button>
-    </div>
-  `).join('');
-
-  if (banner) list.prepend(banner);
-}
-
-async function runPipeline() {
-  if (isRunning) return;
-  const key = getApiKey();
-  if (!key) { showToast('Enter your API key first', 'error'); return; }
-
-  const goal = document.getElementById('goalInput').value.trim();
-  if (!goal) { showToast('Enter a goal to run', 'error'); return; }
-  if (!agents.length) { showToast('Add at least one agent first', 'error'); return; }
-
-  isRunning = true;
-  const btn = document.getElementById('runBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Running...';
-
-  const output = document.getElementById('outputMain');
-  output.innerHTML = '';
-  document.getElementById('outputPlaceholder')?.remove();
-  setProgress(5);
-
-  addFeed(`🚀 Starting pipeline: "${goal.substring(0, 50)}"`, 'info');
-  agents.forEach(a => setAgentStatus(a.id, 'idle'));
-
-  try {
-    setProgress(15);
-    addFeed(`Sending to ${agents.length} agents...`);
-
-    // If template agents (not saved to backend), run locally
-    const isTemplateRun = agents.some(a => a.id.startsWith('tmpl_'));
-
-    let data;
-    if (isTemplateRun) {
-      // Run via /tasks/submit with agent instructions in goal
-      const agentDescriptions = agents.map((a, i) =>
-        `Step ${i+1} - ${a.name}: ${a.instructions}`
-      ).join('\n');
-      const fullGoal = `Run this multi-agent pipeline:\n\n${agentDescriptions}\n\nGoal: ${goal}`;
-
-      const r = await fetch(`${API}/tasks/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': key },
-        body: JSON.stringify({ goal: fullGoal })
-      });
-      if (!r.ok) {
-        const err = await r.json();
-        throw new Error(err.detail || 'Pipeline failed');
-      }
-      const taskData = await r.json();
-      setProgress(100);
-
-      // Mark all done
-      agents.forEach(a => setAgentStatus(a.id, 'done'));
-
-      // Show final output
-      if (taskData.result_preview) {
-        const final = document.createElement('div');
-        final.className = 'final-output';
-        final.innerHTML = `
-          <div class="final-output-label">
-            ⚡ Final Output
-            <button class="copy-btn" onclick="copyText(\`${escapeForAttr(taskData.result_preview)}\`)">copy</button>
-          </div>
-          <div class="final-output-text">${taskData.result_preview}</div>
-        `;
-        output.appendChild(final);
-      }
-      addFeed(`🎉 Pipeline complete!`, 'success');
-
+  function handleMsg(msg) {
+    if (msg.type === 'agent_update') {
+      feedLog(msg.agent || 'agent', msg.message || JSON.stringify(msg));
+      if (msg.status === 'complete' && msg.output) setOutput(msg.output);
+    } else if (msg.type === 'task_complete') {
+      feedLog('system', '✅ Complete');
+      if (msg.output) setOutput(msg.output);
+      setRunning(false);
     } else {
-      // Run via pipeline API
-      const r = await fetch(`${API}/pipeline/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': key },
-        body: JSON.stringify({ goal })
-      });
-      if (!r.ok) {
-        const err = await r.json();
-        throw new Error(err.detail || 'Pipeline failed');
-      }
-      data = await r.json();
-      setProgress(100);
-
-      (data.steps || []).forEach((step, i) => {
-        const agentObj = agents.find(a => a.name === step.agent);
-        if (agentObj) setAgentStatus(agentObj.id, 'done');
-
-        const card = document.createElement('div');
-        card.className = 'step-card';
-        card.style.animationDelay = `${i * 0.1}s`;
-        card.innerHTML = `
-          <div class="step-card-header">
-            <span style="font-size:16px">${getAgentEmoji(step.agent)}</span>
-            <span class="step-agent-name">${step.agent}</span>
-            <span class="step-badge step-badge-done">✓ done</span>
-            <button class="copy-btn" onclick="copyText(\`${escapeForAttr(step.output)}\`)">copy</button>
-          </div>
-          <div class="step-card-body">${step.output}</div>
-        `;
-        output.appendChild(card);
-        addFeed(`✅ ${step.agent} completed`, 'success');
-      });
-
-      if (data.final_output) {
-        const final = document.createElement('div');
-        final.className = 'final-output';
-        final.innerHTML = `
-          <div class="final-output-label">
-            ⚡ Final Output
-            <button class="copy-btn" onclick="copyText(\`${escapeForAttr(data.final_output)}\`)">copy</button>
-          </div>
-          <div class="final-output-text">${data.final_output}</div>
-        `;
-        output.appendChild(final);
-        addFeed(`🎉 Pipeline complete!`, 'success');
-      }
+      feedLog('system', JSON.stringify(msg));
     }
-
-  } catch(e) {
-    showToast(e.message || 'Pipeline failed', 'error');
-    addFeed(`❌ Error: ${e.message}`, '');
-    agents.forEach(a => setAgentStatus(a.id, 'idle'));
-    setProgress(0);
   }
 
-  isRunning = false;
-  btn.disabled = false;
-  btn.textContent = '▶ Run Pipeline';
-}
+  // ─── Feed ─────────────────────────────────────────────────────────────────
+  function feedLog(agent, message) {
+    const feed = document.getElementById('liveFeed');
+    const now  = new Date().toLocaleTimeString('en-GB');
+    const line = document.createElement('div');
+    line.className = 'feed-line';
+    const isDone = message.includes('✅');
+    const isErr  = /error/i.test(message);
+    line.innerHTML =
+      `<span class="ts">${now}</span> ` +
+      (agent !== 'system' ? `<span class="agent-tag">[${esc(agent)}]</span> ` : '') +
+      `<span class="${isDone?'ok':isErr?'err':''}">${esc(message)}</span>`;
+    feed.appendChild(line);
+    feed.scrollTop = feed.scrollHeight;
+  }
 
-function setAgentStatus(agentId, status) {
-  const pill = document.getElementById(`pill-${agentId}`);
-  const badge = document.getElementById(`status-${agentId}`);
-  if (!pill || !badge) return;
-  pill.className = `agent-pill ${status === 'running' ? 'running' : status === 'done' ? 'done' : ''}`;
-  badge.className = `agent-status-indicator status-${status}`;
-  badge.textContent = status;
-}
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function setProgress(pct) {
-  document.getElementById('progressFill').style.width = pct + '%';
-}
+  // ─── Pipeline ─────────────────────────────────────────────────────────────
+  let pipeline = [];
 
-function getAgentEmoji(name) {
-  const n = name.toLowerCase();
-  if (n.includes('research')) return '🔍';
-  if (n.includes('write') || n.includes('writer')) return '✍️';
-  if (n.includes('edit') || n.includes('editor')) return '🎨';
-  if (n.includes('plan') || n.includes('planner')) return '🧠';
-  if (n.includes('fact') || n.includes('check')) return '🔎';
-  if (n.includes('code') || n.includes('dev')) return '💻';
-  if (n.includes('seo')) return '📈';
-  if (n.includes('summar')) return '📝';
-  if (n.includes('security')) return '🔐';
-  if (n.includes('sales') || n.includes('email')) return '📧';
-  if (n.includes('legal') || n.includes('contract')) return '⚖️';
-  return '🤖';
-}
+  function addAgent() {
+    const name  = document.getElementById('agentName').value.trim();
+    const order = parseInt(document.getElementById('agentOrder').value) || (pipeline.length + 1);
+    const instr = document.getElementById('agentInstr').value.trim();
+    if (!name) { alert('Agent name required'); return; }
+    pipeline.push({ name, order, instructions: instr });
+    pipeline.sort((a,b) => a.order - b.order);
+    document.getElementById('agentName').value  = '';
+    document.getElementById('agentOrder').value = '';
+    document.getElementById('agentInstr').value = '';
+    renderPipeline();
+  }
 
-function copyText(text) {
-  navigator.clipboard.writeText(text).then(() => showToast('Copied!', 'success'));
-}
+  function removeAgent(i) { pipeline.splice(i, 1); renderPipeline(); }
+  function clearPipeline() { if (!pipeline.length || confirm('Clear all?')) { pipeline = []; renderPipeline(); } }
 
-function escapeForAttr(str) {
-  return (str || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-}
+  function renderPipeline() {
+    document.getElementById('agentCount').textContent = pipeline.length + ' agent' + (pipeline.length !== 1 ? 's' : '');
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('goalInput').addEventListener('keypress', e => {
-    if (e.key === 'Enter') runPipeline();
-  });
-});
+    const list = document.getElementById('pipelineList');
+    if (!pipeline.length) {
+      list.innerHTML = '<div class="empty">No agents yet.</div>';
+    } else {
+      list.innerHTML = pipeline.map((a, i) =>
+        (i ? '<div class="pipeline-arrow">↓</div>' : '') +
+        `<div class="pipeline-agent">
+          <div class="agent-num">${a.order}</div>
+          <div class="agent-info">
+            <div class="agent-name">${esc(a.name)}</div>
+            <div class="agent-instr">${esc(a.instructions || '—')}</div>
+          </div>
+          <button class="agent-remove" onclick="removeAgent(${i})">×</button>
+        </div>`
+      ).join('');
+    }
+
+    // Preview row
+    const preview = document.getElementById('pipelinePreview');
+    if (!pipeline.length) {
+      preview.innerHTML = '<div class="empty" style="padding:10px">Add agents to see the pipeline here</div>';
+    } else {
+      preview.innerHTML = pipeline.map((a, i) =>
+        (i ? '<span style="color:var(--muted);font-size:1.2rem">→</span>' : '') +
+        `<div style="background:#0a0a0a;border:1px solid var(--border);border-radius:6px;padding:10px 14px;text-align:center;min-width:110px">
+          <div style="font-size:.7rem;color:var(--accent);font-weight:700">${esc(a.name)}</div>
+          <div style="font-size:.65rem;color:var(--muted);margin-top:2px">${esc((a.instructions||'').slice(0,30))}${a.instructions&&a.instructions.length>30?'…':''}</div>
+        </div>`
+      ).join('');
+    }
+  }
+
+  // ─── Run ──────────────────────────────────────────────────────────────────
+  async function runPipeline() {
+    const goal = document.getElementById('pipelineGoal').value.trim();
+    const key  = document.getElementById('apiKey').value.trim();
+    if (!goal) { alert('Enter a goal'); return; }
+    if (!pipeline.length) { alert('Add at least one agent'); return; }
+
+    setRunning(true);
+    feedLog('system', `Running pipeline (${pipeline.length} agents): ${goal}`);
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (key) headers['X-API-Key'] = key;
+
+    try {
+      const res  = await fetch(BASE_URL + '/pipeline/run', {
+        method: 'POST', headers,
+        body: JSON.stringify({ goal, agents: pipeline })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      feedLog('system', 'Pipeline submitted — watching live feed…');
+      if (data.output) { setOutput(data.output); setRunning(false); }
+    } catch(err) {
+      feedLog('system', 'Error: ' + err.message);
+      setRunning(false);
+    }
+  }
+
+  function setOutput(text) {
+    document.getElementById('outputBox').textContent = text;
+  }
+
+  function setRunning(state) {
+    document.getElementById('runBtn').disabled = state;
+    document.getElementById('runningRow').style.display = state ? 'flex' : 'none';
+  }
+
+  function copyOutput() {
+    const text = document.getElementById('outputBox').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 2000);
+    });
+  }
+
+  // ─── Init ─────────────────────────────────────────────────────────────────
+  connectWS();
 </script>
 </body>
 </html>

@@ -1,0 +1,15 @@
+[
+  "tests/test_agents.py::test_agent_registry_lists_all",
+  "tests/test_agents.py::test_agent_registry_registers",
+  "tests/test_agents.py::test_base_agent_runs_task",
+  "tests/test_agents.py::test_find_best_agent",
+  "tests/test_agents.py::test_two_agents_complete_one_task",
+  "tests/test_demo.py::test_full_yc_demo",
+  "tests/test_memory.py::test_get_all_memory",
+  "tests/test_memory.py::test_long_term_write_search",
+  "tests/test_memory.py::test_shared_memory_across_agents",
+  "tests/test_memory.py::test_short_term_write_read",
+  "tests/test_orchestrator.py::test_execute_completes_goal",
+  "tests/test_orchestrator.py::test_get_status",
+  "tests/test_orchestrator.py::test_plan_creates_subtasks"
+]
