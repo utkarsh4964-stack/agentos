@@ -23,7 +23,10 @@ app.add_middleware(
 )
 
 app.include_router(router)
-
+@app.get("/templates")
+async def templates_page():
+    from fastapi.responses import FileResponse
+    return FileResponse("dashboard/templates.html")
 @app.get("/account")
 async def account_page():
     from fastapi.responses import FileResponse
