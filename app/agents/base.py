@@ -1,6 +1,5 @@
 import time
 from groq import Groq
-from app.config import GEMINI_API_KEY
 from app.memory.memory_store import MemoryStore
 from app.resources.resource_manager import ResourceManager
 import os
@@ -23,12 +22,26 @@ class BaseAgent:
     def run(self, task: str) -> str:
         self.status = "working"
         print(f"\n[{self.name}] Starting: {task[:80]}...")
+
         if not self.resources.check_rate_limit(self.name):
             self.status = "idle"
             return f"[{self.name}] Rate limit hit. Try again in 60 seconds."
+
+        # Get memory context
         context = self._get_memory_context(task)
-        prompt = self._build_prompt(task, context)
+
+        # Web search if this agent should search
+        search_context = ""
+        if self._should_use_search():
+            search_context = self._do_web_search(task)
+
+        # Build prompt
+        prompt = self._build_prompt(task, context, search_context)
+
+        # Call AI
         result = self._call_ai_with_retry(prompt)
+
+        # Save to memory
         mem_key = f"{self.name}_{int(time.time())}"
         self.memory.write(mem_key, result, long_term=True)
         self._last_output = result
@@ -36,12 +49,34 @@ class BaseAgent:
         print(f"[{self.name}] Done ✓")
         return result
 
-    def _build_prompt(self, task: str, context: str = "") -> str:
+    def _should_use_search(self) -> bool:
+        """ResearchAgent and ScoutAgent always search."""
+        search_agents = ["research", "scout", "search", "find"]
+        return any(kw in self.name.lower() for kw in search_agents)
+
+    def _do_web_search(self, task: str) -> str:
+        """Perform web search and return results."""
+        try:
+            from app.search import web_search, should_search
+            if should_search(task):
+                print(f"[{self.name}] 🔍 Searching web for: {task[:60]}...")
+                results = web_search(task)
+                print(f"[{self.name}] ✓ Web search complete")
+                return results
+        except Exception as e:
+            print(f"[{self.name}] Search error: {e}")
+        return ""
+
+    def _build_prompt(self, task: str, context: str = "",
+                      search_context: str = "") -> str:
         prompt = f"You are {self.name}. Your role: {self.role}.\n\n"
         if self.goal:
             prompt += f"Your goal: {self.goal}\n\n"
+        if search_context:
+            prompt += f"REAL-TIME WEB SEARCH RESULTS:\n{search_context}\n\n"
+            prompt += "Use the above current web data in your response.\n\n"
         if context:
-            prompt += f"Relevant context:\n{context}\n\n"
+            prompt += f"Relevant memory context:\n{context}\n\n"
         prompt += f"Task: {task}\n\nRespond clearly and completely."
         return prompt
 
@@ -63,10 +98,11 @@ class BaseAgent:
                 response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[
-                        {"role": "system", "content": f"You are {self.name}. {self.role}"},
+                        {"role": "system",
+                         "content": f"You are {self.name}. {self.role}"},
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=1000,
+                    max_tokens=1500,
                 )
                 self.resources.log_call(self.name, tokens_used=500)
                 return response.choices[0].message.content
@@ -76,30 +112,33 @@ class BaseAgent:
                     time.sleep(2 ** attempt)
                 else:
                     self.status = "failed"
-                    return f"[{self.name}] Failed after {max_retries} attempts: {str(e)}"
+                    return f"[{self.name}] Failed: {str(e)}"
 
     def _demo_response(self, prompt: str) -> str:
         if "planner" in self.name.lower():
-            return "1. Research the topic\n2. Write a draft\n3. Fact-check\n4. Edit and polish"
+            return "1. Research\n2. Write\n3. Fact-check\n4. Edit"
         elif "research" in self.name.lower():
-            return "Key findings:\n- Major facts about the topic\n- Important statistics\n- Recent developments"
+            return "Key findings from research and web search..."
         elif "writer" in self.name.lower():
-            return "Here is a well-structured report based on the research findings..."
+            return "Well-structured content based on research..."
         elif "fact" in self.name.lower():
-            return "All claims verified. ✓"
+            return "All claims verified ✓"
         else:
             return "Content polished and ready."
 
-    def save_to_memory(self, key: str, value: str, long_term: bool = False):
+    def save_to_memory(self, key: str, value: str,
+                       long_term: bool = False):
         self.memory.write(key, value, long_term)
 
     def recall_from_memory(self, query: str) -> list:
         return self.memory.search(query)
 
-    def send_message(self, to_agent: str, content: str, msg_type: str = "TASK"):
+    def send_message(self, to_agent: str, content: str,
+                     msg_type: str = "TASK"):
         from app.comms.message_bus import MessageBus, MessageType
         bus = MessageBus()
-        return bus.send(self.name, to_agent, content, MessageType(msg_type))
+        return bus.send(self.name, to_agent, content,
+                        MessageType(msg_type))
 
     def receive_messages(self):
         from app.comms.message_bus import MessageBus
@@ -111,5 +150,6 @@ class BaseAgent:
             "name": self.name,
             "role": self.role,
             "status": self.status,
-            "last_output_preview": self._last_output[:100] if self._last_output else ""
+            "last_output_preview": self._last_output[:100]
+            if self._last_output else ""
         }
