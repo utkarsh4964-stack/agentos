@@ -13,399 +13,842 @@
     --red: #EF4444; --yellow: #F59E0B;
   }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
-  header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
-  header h1 { font-size: 22px; color: white; }
-  header span { font-size: 12px; background: var(--accent); color: white; padding: 3px 10px; border-radius: 20px; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; margin-left: auto; }
-  .status-label { font-size: 12px; color: var(--green); }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 12px 20px; display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; z-index: 200;
+  }
+  header h1 { font-size: 20px; color: white; }
+  .badge-v { font-size: 11px; background: var(--accent); color: white; padding: 3px 10px; border-radius: 20px; }
+  .badge-builder { font-size: 11px; background: var(--teal); color: #0D0B1E; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .status-label { font-size: 12px; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-  .main { display: grid; grid-template-columns: 1fr 320px; gap: 0; height: calc(100vh - 57px); }
-  .left { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-  .right { background: var(--card); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  /* ── TOP NAV (page switcher) ── */
+  .top-nav {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 0 20px; display: flex; align-items: center; gap: 4px;
+    position: sticky; top: 57px; z-index: 190;
+  }
+  .top-nav button {
+    background: transparent; border: none; color: var(--muted);
+    padding: 12px 18px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .top-nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .top-nav button:hover { color: var(--text); }
 
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ══════════════════════════════════
+     DASHBOARD PAGE
+  ══════════════════════════════════ */
+  .dash-layout {
+    display: grid; grid-template-columns: 1fr 300px;
+    height: calc(100vh - 97px);
+  }
+  .dash-left { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  .dash-right { background: var(--card); border-left: 1px solid var(--border); padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ══════════════════════════════════
+     BUILDER PAGE
+  ══════════════════════════════════ */
+  .builder-layout {
+    display: grid; grid-template-columns: 340px 1fr;
+    height: calc(100vh - 97px);
+  }
+  .builder-left {
+    background: var(--card); border-right: 1px solid var(--border);
+    padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;
+  }
+  .builder-right { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ── SHARED CARD ── */
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
   .card-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
 
-  /* Goal input */
-  .goal-input { display: flex; gap: 10px; }
-  .goal-input input {
-    flex: 1; background: #1E1940; border: 1px solid var(--border);
-    color: var(--text); padding: 12px 16px; border-radius: 8px; font-size: 14px; outline: none;
+  /* ── FORM ELEMENTS ── */
+  .form-group { margin-bottom: 10px; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 5px; display: block; }
+  .form-input, .form-textarea, .form-select {
+    width: 100%; background: #1E1940; border: 1px solid var(--border);
+    color: var(--text); padding: 10px 12px; border-radius: 8px;
+    font-size: 13px; outline: none; font-family: inherit;
   }
-  .goal-input input:focus { border-color: var(--accent); }
-  .goal-input button {
+  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+  .form-row { display: grid; grid-template-columns: 1fr 80px; gap: 8px; }
+
+  /* ── BUTTONS ── */
+  .btn { border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .2s; padding: 10px 16px; }
+  .btn:hover { opacity: .85; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-teal { background: var(--teal); color: #0D0B1E; }
+  .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 4px 8px; font-size: 11px; border-radius: 5px; }
+  .btn-full { width: 100%; padding: 14px; font-size: 15px; border-radius: 10px; }
+
+  /* ── GOAL INPUT (dashboard) ── */
+  .goal-row { display: flex; gap: 10px; }
+  .goal-row input {
+    flex: 1; background: #1E1940; border: 1px solid var(--border);
+    color: var(--text); padding: 12px 16px; border-radius: 8px;
+    font-size: 14px; outline: none; min-width: 0;
+  }
+  .goal-row input:focus { border-color: var(--accent); }
+  .goal-row button {
     background: var(--accent); color: white; border: none;
     padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 700;
-    cursor: pointer; white-space: nowrap; transition: opacity .2s;
+    cursor: pointer; white-space: nowrap; transition: opacity .2s; flex-shrink: 0;
   }
-  .goal-input button:hover { opacity: .85; }
-  .goal-input button:disabled { opacity: .4; cursor: not-allowed; }
+  .goal-row button:hover { opacity: .85; }
+  .goal-row button:disabled { opacity: .4; cursor: not-allowed; }
 
-  /* Agent cards */
-  .agents-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-  .agent-card {
-    background: #1A1535; border: 1px solid var(--border);
-    border-radius: 8px; padding: 12px; text-align: center; transition: all .3s;
-  }
+  /* ── AGENT GRID (dashboard) ── */
+  .agents-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+  .agent-card { background: #1A1535; border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; transition: all .3s; }
   .agent-card.working { border-color: var(--accent); background: #1E1645; }
   .agent-card.done { border-color: var(--green); }
   .agent-card.failed { border-color: var(--red); }
-  .agent-icon { font-size: 24px; margin-bottom: 6px; }
-  .agent-name { font-size: 11px; font-weight: 700; color: var(--text); }
-  .agent-status { font-size: 10px; margin-top: 4px; padding: 2px 8px; border-radius: 10px; display: inline-block; }
-  .status-idle { background: #2A2550; color: var(--muted); }
-  .status-working { background: #2D1F6E; color: #A78BFA; animation: pulse 1s infinite; }
-  .status-done { background: #14532D; color: var(--green); }
-  .status-failed { background: #7F1D1D; color: var(--red); }
+  .agent-icon { font-size: 22px; margin-bottom: 4px; }
+  .agent-name { font-size: 10px; font-weight: 700; }
+  .agent-status-badge { font-size: 9px; margin-top: 3px; padding: 2px 6px; border-radius: 10px; display: inline-block; }
+  .s-idle { background:#2A2550; color:var(--muted); }
+  .s-working { background:#2D1F6E; color:#A78BFA; animation:pulse 1s infinite; }
+  .s-done { background:#14532D; color:var(--green); }
+  .s-failed { background:#7F1D1D; color:var(--red); }
 
-  /* Result */
+  /* ── RESULT BOX ── */
   .result-box {
-    background: #0A0918; border: 1px solid var(--border);
-    border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.7;
-    white-space: pre-wrap; min-height: 80px; color: #C4B8FF;
-    max-height: 300px; overflow-y: auto;
+    background: #0A0918; border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; font-size: 13px; line-height: 1.7; white-space: pre-wrap;
+    min-height: 80px; color: #C4B8FF; max-height: 320px; overflow-y: auto;
   }
   .result-box.empty { color: var(--muted); font-style: italic; }
 
-  /* Task history */
-  .task-item { background: #1A1535; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
-  .task-item .task-goal { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .task-item .task-meta { font-size: 10px; color: var(--muted); }
-  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
-  .badge-done { background: #14532D; color: var(--green); }
-  .badge-running { background: #2D1F6E; color: #A78BFA; }
-  .badge-failed { background: #7F1D1D; color: var(--red); }
+  /* ── PIPELINE LIST (builder) ── */
+  .pipeline-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 20px; border: 1px dashed var(--border); border-radius: 8px; }
+  .pipeline-item {
+    background: #1A1535; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; margin-bottom: 8px; position: relative;
+  }
+  .pipeline-item.running { border-color: var(--accent); }
+  .pipeline-item.done { border-color: var(--green); }
+  .pipeline-connector { text-align: center; color: var(--muted); font-size: 16px; margin: 4px 0; }
+  .pipeline-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .pipeline-num { width: 22px; height: 22px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .pipeline-item-name { font-size: 13px; font-weight: 700; flex: 1; }
+  .pipeline-item-inst { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pipeline-item-status { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
 
-  /* Live feed */
-  .feed-item { font-size: 11px; padding: 6px 0; border-bottom: 1px solid #1E1940; color: var(--muted); line-height: 1.4; }
-  .feed-item span { color: var(--teal); font-weight: 700; }
-  #feed { max-height: 220px; overflow-y: auto; }
+  /* ── TASK INPUT (builder run) ── */
+  .task-input-area { background: #1E1940; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--text); width: 100%; min-height: 90px; resize: vertical; outline: none; font-family: inherit; line-height: 1.5; }
+  .task-input-area:focus { border-color: var(--accent); }
 
-  /* Memory */
-  .mem-item { font-size: 11px; padding: 5px 8px; background: #1A1535; border-radius: 5px; margin-bottom: 5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  /* Stats */
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  /* ── STATS ── */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .stat { background: #1A1535; border-radius: 6px; padding: 10px; text-align: center; }
   .stat-val { font-size: 20px; font-weight: 800; color: var(--accent); }
   .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-  /* Progress bar */
+  /* ── FEED ── */
+  .feed-item { font-size: 11px; padding: 6px 0; border-bottom: 1px solid #1E1940; color: var(--muted); line-height: 1.4; }
+  .feed-item .feed-time { color: var(--teal); font-weight: 700; }
+  #feed, #builderFeed { max-height: 200px; overflow-y: auto; }
+
+  /* ── TASK HISTORY ── */
+  .task-item { background: #1A1535; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+  .task-item-goal { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .task-item-meta { font-size: 10px; color: var(--muted); }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .badge-done { background:#14532D; color:var(--green); }
+  .badge-running { background:#2D1F6E; color:#A78BFA; }
+  .badge-failed { background:#7F1D1D; color:var(--red); }
+  .badge-idle { background:#2A2550; color:var(--muted); }
+
+  /* ── PROGRESS ── */
   .progress-wrap { background: #1A1535; border-radius: 4px; height: 4px; margin-top: 8px; }
   .progress-bar { height: 4px; border-radius: 4px; background: var(--accent); transition: width .5s; }
+  .progress-label { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
+  /* ── MEMORY ── */
+  .mem-item { font-size: 11px; padding: 5px 8px; background: #1A1535; border-radius: 5px; margin-bottom: 5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── SCROLLBAR ── */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ══════════════════════════════════════════
+     MOBILE  ≤ 768px
+  ══════════════════════════════════════════ */
+  .mobile-panel-tabs { display: none; }
+
+  @media (max-width: 768px) {
+
+    /* Sub-tab bar for left/right panel switching */
+    .mobile-panel-tabs {
+      display: flex;
+      background: #0D0B1E;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 97px; z-index: 180;
+    }
+    .mobile-panel-tabs button {
+      flex: 1; padding: 10px 8px; background: transparent;
+      color: var(--muted); border: none; font-size: 12px; font-weight: 600;
+      cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s;
+    }
+    .mobile-panel-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ─ Dashboard mobile ─ */
+    .dash-layout { display: block; height: auto; }
+    .dash-left, .dash-right { width: 100%; height: auto; border: none; }
+    .dash-right { display: none; }
+
+    /* ─ Builder mobile ─ */
+    .builder-layout { display: block; height: auto; }
+    .builder-left, .builder-right { width: 100%; height: auto; border: none; background: var(--bg); }
+    .builder-right { display: none; }
+
+    /* ─ Stack goal input ─ */
+    .goal-row { flex-direction: column; gap: 8px; }
+    .goal-row input { width: 100%; font-size: 16px; }
+    .goal-row button { width: 100%; padding: 16px; font-size: 15px; }
+
+    /* ─ Agents: 3 cols ─ */
+    .agents-grid { grid-template-columns: repeat(3,1fr); }
+
+    /* ─ Top nav scrollable ─ */
+    .top-nav { overflow-x: auto; padding: 0 12px; }
+    .top-nav button { padding: 11px 14px; white-space: nowrap; }
+
+    /* ─ form row single col ─ */
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 380px) {
+    .agents-grid { grid-template-columns: repeat(2,1fr); }
+  }
 </style>
 </head>
 <body>
 
+<!-- ══ HEADER ══ -->
 <header>
-  <span>🤖</span>
+  <span style="font-size:20px">🤖</span>
   <h1>AgentOS</h1>
-  <span>v1.0</span>
+  <span class="badge-v">v1.0</span>
+  <span class="badge-builder" id="headerBadge" style="display:none">PIPELINE BUILDER</span>
   <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
     <div class="status-dot" id="connDot"></div>
-    <span class="status-label" id="connLabel">Connecting...</span>
+    <span class="status-label" id="connLabel" style="color:var(--green)">Connecting...</span>
   </div>
 </header>
 
-<div class="main">
-  <div class="left">
+<!-- ══ TOP NAV ══ -->
+<div class="top-nav">
+  <button class="active" onclick="switchPage('dashboard')" id="nav-dashboard">Dashboard</button>
+  <button onclick="switchPage('builder')" id="nav-builder">Builder</button>
+  <button onclick="switchPage('api')" id="nav-api">API Docs</button>
+</div>
 
-    <!-- Goal input -->
-    <div class="card">
-      <div class="card-title">Submit a Goal to AgentOS</div>
-      <div class="goal-input">
-        <input id="goalInput" type="text" placeholder="e.g. Write a research report on Artificial Intelligence" />
-        <button id="runBtn" onclick="submitGoal()">▶ Run Agents</button>
-      </div>
-      <div class="progress-wrap" style="margin-top:10px">
-        <div class="progress-bar" id="progressBar" style="width:0%"></div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px" id="progressLabel"></div>
-    </div>
+<!-- ══════════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
 
-    <!-- Agent status -->
-    <div class="card">
-      <div class="card-title">Agents</div>
-      <div class="agents-grid" id="agentsGrid">
-        <!-- Populated by JS -->
-      </div>
-    </div>
-
-    <!-- Result -->
-    <div class="card" style="flex:1">
-      <div class="card-title">Final Output</div>
-      <div class="result-box empty" id="resultBox">
-        Submit a goal above to see agents work together in real time...
-      </div>
-    </div>
-
+  <!-- Mobile panel tabs -->
+  <div class="mobile-panel-tabs">
+    <button class="active" id="dtab-main" onclick="switchDashPanel('main')">▶ Run Agents</button>
+    <button id="dtab-stats" onclick="switchDashPanel('stats')">📊 Stats & Feed</button>
   </div>
 
-  <div class="right">
+  <div class="dash-layout">
 
-    <!-- Stats -->
-    <div>
-      <div class="card-title">Stats</div>
-      <div class="stats">
-        <div class="stat"><div class="stat-val" id="statTasks">0</div><div class="stat-label">Tasks Run</div></div>
-        <div class="stat"><div class="stat-val" id="statCalls">0</div><div class="stat-label">API Calls</div></div>
-        <div class="stat"><div class="stat-val" id="statMsgs">0</div><div class="stat-label">Messages</div></div>
-        <div class="stat"><div class="stat-val" id="statCost">$0</div><div class="stat-label">Cost</div></div>
+    <!-- LEFT -->
+    <div class="dash-left" id="dpanel-main">
+      <div class="card">
+        <div class="card-title">Submit a Goal to AgentOS</div>
+        <div class="goal-row">
+          <input id="goalInput" type="text" placeholder="e.g. Write a research report on AI trends" />
+          <button id="runBtn" onclick="submitGoal()">▶ Run Agents</button>
+        </div>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+        <div class="progress-label" id="progressLabel"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Agents</div>
+        <div class="agents-grid" id="agentsGrid"></div>
+      </div>
+
+      <div class="card" style="flex:1">
+        <div class="card-title">Final Output</div>
+        <div class="result-box empty" id="resultBox">Submit a goal above to see agents work together in real time...</div>
       </div>
     </div>
 
-    <!-- Live feed -->
-    <div>
-      <div class="card-title">Live Feed</div>
-      <div id="feed"></div>
-    </div>
-
-    <!-- Task history -->
-    <div>
-      <div class="card-title">Task History</div>
-      <div id="taskHistory"></div>
-    </div>
-
-    <!-- Memory -->
-    <div>
-      <div class="card-title">Shared Memory</div>
-      <div id="memoryView"></div>
+    <!-- RIGHT -->
+    <div class="dash-right" id="dpanel-stats">
+      <div>
+        <div class="card-title">Stats</div>
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-val" id="statTasks">0</div><div class="stat-label">Tasks Run</div></div>
+          <div class="stat"><div class="stat-val" id="statCalls">0</div><div class="stat-label">API Calls</div></div>
+          <div class="stat"><div class="stat-val" id="statMsgs">0</div><div class="stat-label">Messages</div></div>
+          <div class="stat"><div class="stat-val" id="statCost">$0</div><div class="stat-label">Cost</div></div>
+        </div>
+      </div>
+      <div><div class="card-title">Live Feed</div><div id="feed"></div></div>
+      <div><div class="card-title">Task History</div><div id="taskHistory"></div></div>
+      <div><div class="card-title">Shared Memory</div><div id="memoryView"></div></div>
     </div>
 
   </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     PAGE: BUILDER
+══════════════════════════════════════ -->
+<div class="page" id="page-builder">
+
+  <!-- Mobile panel tabs -->
+  <div class="mobile-panel-tabs">
+    <button class="active" id="btab-config" onclick="switchBuilderPanel('config')">⚙️ Pipeline</button>
+    <button id="btab-run" onclick="switchBuilderPanel('run')">▶ Run Pipeline</button>
+  </div>
+
+  <div class="builder-layout">
+
+    <!-- LEFT: pipeline config -->
+    <div class="builder-left" id="bpanel-config">
+
+      <!-- Agent count badge -->
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="card-title" style="margin:0">YOUR PIPELINE</span>
+        <span id="agentCount" style="font-size:11px;color:var(--muted)">0 agents</span>
+      </div>
+
+      <!-- Add agent form -->
+      <div class="card">
+        <div class="card-title">Add Agent</div>
+        <div class="form-group">
+          <label class="form-label">Agent Name</label>
+          <input class="form-input" id="agentName" placeholder="e.g. Researcher" />
+        </div>
+        <div class="form-group">
+          <div class="form-row">
+            <div>
+              <label class="form-label">Order</label>
+              <input class="form-input" id="agentOrder" type="number" min="1" placeholder="1" />
+            </div>
+            <div style="display:flex;flex-direction:column;justify-content:flex-end">
+              <!-- spacer -->
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Instructions (What this agent does)</label>
+          <textarea class="form-textarea" id="agentInstructions" placeholder="e.g. You are a research expert. Find key facts, statistics, and recent developments about the given topic. Be thorough and cite sources."></textarea>
+        </div>
+        <button class="btn btn-accent btn-full" onclick="addAgent()">+ Add to Pipeline</button>
+      </div>
+
+      <!-- Pipeline list -->
+      <div>
+        <div class="card-title">Pipeline Order</div>
+        <div id="pipelineList">
+          <div class="pipeline-empty">No agents yet. Add your first agent above.</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px" id="pipelineActions" style="display:none">
+          <button class="btn btn-danger btn-full" style="flex:1" onclick="clearPipeline()">🗑 Clear All</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: run panel -->
+    <div class="builder-right" id="bpanel-run">
+
+      <div class="card">
+        <div class="card-title">Run Your Pipeline</div>
+        <div class="form-group">
+          <label class="form-label">Task / Goal</label>
+          <textarea class="task-input-area" id="pipelineTask" placeholder="e.g. Research and write a detailed report on the EV market in India 2025"></textarea>
+        </div>
+        <button class="btn btn-teal btn-full" id="runPipelineBtn" onclick="runPipeline()">▶ Run Pipeline</button>
+        <div class="progress-wrap" style="margin-top:10px"><div class="progress-bar" id="pipelineProgress" style="width:0%"></div></div>
+        <div class="progress-label" id="pipelineProgressLabel"></div>
+      </div>
+
+      <div class="card" style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="card-title" style="margin:0">Final Output</div>
+          <button class="btn" style="background:#1E1940;color:var(--muted);padding:4px 10px;font-size:11px" onclick="copyOutput()">copy</button>
+        </div>
+        <div class="result-box empty" id="pipelineResult">Configure your pipeline on the left, then run it here...</div>
+      </div>
+
+      <div>
+        <div class="card-title">Live Agent Feed</div>
+        <div id="builderFeed"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: API DOCS
+══════════════════════════════════════ -->
+<div class="page" id="page-api">
+  <div style="max-width:700px;margin:40px auto;padding:0 20px">
+    <div class="card">
+      <div class="card-title">API Reference</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Base URL: <code style="background:#1E1940;padding:2px 8px;border-radius:4px;color:var(--teal)">http://your-server:8000</code></p>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:#1A1535;border-radius:8px;padding:14px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span style="background:#14532D;color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">GET</span>
+            <code style="color:var(--teal);font-size:13px">/agents</code>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">List all registered agents</div>
+        </div>
+        <div style="background:#1A1535;border-radius:8px;padding:14px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span style="background:#1E3A5F;color:#60A5FA;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">POST</span>
+            <code style="color:var(--teal);font-size:13px">/tasks/submit</code>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Submit a goal to all agents</div>
+          <pre style="background:#0A0918;padding:10px;border-radius:6px;font-size:11px;color:#C4B8FF;overflow-x:auto">{"goal": "Write a report on AI trends"}</pre>
+        </div>
+        <div style="background:#1A1535;border-radius:8px;padding:14px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span style="background:#14532D;color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">GET</span>
+            <code style="color:var(--teal);font-size:13px">/tasks</code>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">Get all task history</div>
+        </div>
+        <div style="background:#1A1535;border-radius:8px;padding:14px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span style="background:#14532D;color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">GET</span>
+            <code style="color:var(--teal);font-size:13px">/memory/all</code>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">View shared agent memory</div>
+        </div>
+        <div style="background:#1A1535;border-radius:8px;padding:14px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span style="background:#14532D;color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">WS</span>
+            <code style="color:var(--teal);font-size:13px">/ws/live</code>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">WebSocket live agent feed</div>
+        </div>
+        <div style="background:#1A1535;border-radius:8px;padding:14px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span style="background:#14532D;color:var(--green);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">GET</span>
+            <code style="color:var(--teal);font-size:13px">/resources/usage</code>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">API usage and cost tracking</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = "http://localhost:8000";
-const agentIcons = {
-  PlannerAgent: "🧠", ResearchAgent: "🔍",
-  WriterAgent: "✍️", FactCheckerAgent: "🔎", EditorAgent: "🎨"
-};
+const defaultAgentIcons = { PlannerAgent:"🧠", ResearchAgent:"🔍", WriterAgent:"✍️", FactCheckerAgent:"🔎", EditorAgent:"🎨" };
 let ws, taskCount = 0;
 
-// ── Init ──────────────────────────────────────────────────────
+// ── pipeline state ─────────────────────────────────────────
+let pipeline = []; // [{name, instructions, order, status}]
+
+// ══════════════════════════════════════
+//  PAGE NAVIGATION
+// ══════════════════════════════════════
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  document.getElementById('headerBadge').style.display = page === 'builder' ? 'inline' : 'none';
+}
+
+// ── Dashboard panel tabs (mobile) ─────────────────────────
+function switchDashPanel(panel) {
+  const main  = document.getElementById('dpanel-main');
+  const stats = document.getElementById('dpanel-stats');
+  if (window.innerWidth > 768) return;
+  if (panel === 'main') {
+    main.style.display  = 'flex'; stats.style.display = 'none';
+    document.getElementById('dtab-main').classList.add('active');
+    document.getElementById('dtab-stats').classList.remove('active');
+  } else {
+    main.style.display  = 'none'; stats.style.display = 'flex'; stats.style.flexDirection = 'column';
+    document.getElementById('dtab-stats').classList.add('active');
+    document.getElementById('dtab-main').classList.remove('active');
+  }
+}
+
+// ── Builder panel tabs (mobile) ───────────────────────────
+function switchBuilderPanel(panel) {
+  const config = document.getElementById('bpanel-config');
+  const run    = document.getElementById('bpanel-run');
+  if (window.innerWidth > 768) return;
+  if (panel === 'config') {
+    config.style.display = 'flex'; config.style.flexDirection = 'column';
+    run.style.display    = 'none';
+    document.getElementById('btab-config').classList.add('active');
+    document.getElementById('btab-run').classList.remove('active');
+  } else {
+    config.style.display = 'none';
+    run.style.display    = 'flex'; run.style.flexDirection = 'column';
+    document.getElementById('btab-run').classList.add('active');
+    document.getElementById('btab-config').classList.remove('active');
+  }
+}
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    ['dpanel-main','dpanel-stats','bpanel-config','bpanel-run'].forEach(id => {
+      document.getElementById(id).style.display = '';
+    });
+  }
+});
+
+// ══════════════════════════════════════
+//  PIPELINE BUILDER
+// ══════════════════════════════════════
+function addAgent() {
+  const name  = document.getElementById('agentName').value.trim();
+  const order = parseInt(document.getElementById('agentOrder').value) || pipeline.length + 1;
+  const inst  = document.getElementById('agentInstructions').value.trim();
+
+  if (!name) { alert('Please enter an agent name'); return; }
+  if (!inst)  { alert('Please enter instructions for this agent'); return; }
+
+  pipeline.push({ name, instructions: inst, order, status: 'idle' });
+  pipeline.sort((a,b) => a.order - b.order);
+
+  // Clear form
+  document.getElementById('agentName').value = '';
+  document.getElementById('agentOrder').value = '';
+  document.getElementById('agentInstructions').value = '';
+
+  renderPipeline();
+  addBuilderFeed(`➕ Agent added: ${name}`);
+}
+
+function removeAgent(idx) {
+  const name = pipeline[idx].name;
+  pipeline.splice(idx, 1);
+  renderPipeline();
+  addBuilderFeed(`🗑 Agent removed: ${name}`);
+}
+
+function clearPipeline() {
+  if (!confirm('Clear all agents from pipeline?')) return;
+  pipeline = [];
+  renderPipeline();
+  addBuilderFeed('🗑 Pipeline cleared');
+}
+
+function renderPipeline() {
+  const el = document.getElementById('pipelineList');
+  document.getElementById('agentCount').textContent = pipeline.length + ' agent' + (pipeline.length !== 1 ? 's' : '');
+
+  if (!pipeline.length) {
+    el.innerHTML = '<div class="pipeline-empty">No agents yet. Add your first agent above.</div>';
+    document.getElementById('pipelineActions').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('pipelineActions').style.display = 'flex';
+  el.innerHTML = pipeline.map((a, i) => `
+    <div>
+      ${i > 0 ? '<div class="pipeline-connector">↓</div>' : ''}
+      <div class="pipeline-item ${a.status}" id="pitem-${i}">
+        <div class="pipeline-item-header">
+          <div class="pipeline-num">${i+1}</div>
+          <div class="pipeline-item-name">${a.name}</div>
+          <span class="pipeline-item-status badge badge-${a.status === 'done' ? 'done' : a.status === 'running' ? 'running' : 'idle'}">${a.status}</span>
+          <button class="btn btn-danger" onclick="removeAgent(${i})">✕</button>
+        </div>
+        <div class="pipeline-item-inst" title="${a.instructions}">${a.instructions}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Run pipeline ──────────────────────────────────────────
+async function runPipeline() {
+  const task = document.getElementById('pipelineTask').value.trim();
+  if (!task) { alert('Please enter a task/goal to run'); return; }
+  if (!pipeline.length) { alert('Add at least one agent to your pipeline first'); return; }
+
+  const btn = document.getElementById('runPipelineBtn');
+  btn.disabled = true; btn.textContent = '⏳ Running...';
+
+  const resultEl = document.getElementById('pipelineResult');
+  resultEl.className = 'result-box empty';
+  resultEl.textContent = 'Pipeline running...';
+  setPipelineProgress(5, 'Starting pipeline...');
+  addBuilderFeed(`🚀 Starting pipeline: "${task.substring(0,40)}..."`);
+  addBuilderFeed(`📡 Sending to ${pipeline.length} agents...`);
+
+  // Reset all statuses
+  pipeline.forEach(a => a.status = 'idle');
+  renderPipeline();
+
+  try {
+    // Try real API with custom agents
+    const r = await fetch(`${API}/pipeline/run`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ task, agents: pipeline.map(a => ({name: a.name, instructions: a.instructions, order: a.order})) })
+    });
+
+    if (!r.ok) throw new Error('API unavailable');
+    const data = await r.json();
+
+    setPipelineProgress(100, 'Complete!');
+    pipeline.forEach(a => { a.status = 'done'; });
+    renderPipeline();
+
+    resultEl.className = 'result-box';
+    resultEl.textContent = data.result || 'Pipeline completed successfully.';
+    addBuilderFeed('✅ Pipeline complete!');
+
+  } catch(e) {
+    // Demo mode: simulate agents running one by one
+    let currentOutput = task;
+    const total = pipeline.length;
+
+    for (let i = 0; i < pipeline.length; i++) {
+      const agent = pipeline[i];
+      agent.status = 'running';
+      renderPipeline();
+      setPipelineProgress(((i+1)/total)*90, `${agent.name} working...`);
+      addBuilderFeed(`⚡ ${agent.name} processing...`);
+
+      // Simulate work time
+      await sleep(1200 + Math.random() * 800);
+
+      agent.status = 'done';
+      renderPipeline();
+      addBuilderFeed(`✅ ${agent.name} completed`);
+      currentOutput = `[Processed by ${agent.name}]\n${currentOutput}`;
+    }
+
+    setPipelineProgress(100, 'Pipeline complete!');
+    resultEl.className = 'result-box';
+    resultEl.textContent = `Pipeline completed in demo mode.\n\nTask: ${task}\n\nAgents ran in order:\n${pipeline.map((a,i) => `${i+1}. ${a.name}`).join('\n')}\n\n━━━━━━━━━━━━━━━━━━━\n[Demo mode — connect to your backend for real AI output]`;
+    addBuilderFeed('🎉 Pipeline complete!');
+  }
+
+  btn.disabled = false; btn.textContent = '▶ Run Pipeline';
+  setTimeout(() => { pipeline.forEach(a => a.status = 'idle'); renderPipeline(); }, 5000);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function setPipelineProgress(pct, label) {
+  document.getElementById('pipelineProgress').style.width = pct + '%';
+  document.getElementById('pipelineProgressLabel').textContent = label;
+}
+
+function copyOutput() {
+  const text = document.getElementById('pipelineResult').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = 'copied!'; btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = 'copy'; btn.style.color = ''; }, 2000);
+  });
+}
+
+function addBuilderFeed(msg) {
+  const feed = document.getElementById('builderFeed');
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `<span class="feed-time">${new Date().toLocaleTimeString()}</span> ${msg}`;
+  feed.insertBefore(item, feed.firstChild);
+  if (feed.children.length > 20) feed.removeChild(feed.lastChild);
+}
+
+// ══════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════
 window.onload = () => {
-  loadAgents();
-  connectWS();
+  loadAgents(); connectWS();
   setInterval(refreshStats, 3000);
   setInterval(loadMemory, 5000);
   setInterval(loadTasks, 4000);
+  renderPipeline();
+
+  document.getElementById('goalInput')?.addEventListener('keypress', e => {
+    if (e.key === 'Enter') submitGoal();
+  });
+  document.getElementById('agentOrder').value = '';
 };
 
-// ── WebSocket ─────────────────────────────────────────────────
 function connectWS() {
   try {
     ws = new WebSocket(`ws://localhost:8000/ws/live`);
-    ws.onopen = () => setConnected(true);
+    ws.onopen  = () => setConnected(true);
     ws.onclose = () => { setConnected(false); setTimeout(connectWS, 3000); };
     ws.onerror = () => setConnected(false);
     ws.onmessage = e => {
-      const data = JSON.parse(e.data);
-      if (data.type === "update") addFeedItem(data.message);
+      try { const d = JSON.parse(e.data); if (d.type==='update') addFeedItem(d.message); } catch(ex){}
     };
   } catch(e) { setConnected(false); }
 }
 
 function setConnected(ok) {
-  document.getElementById("connDot").style.background = ok ? "var(--green)" : "var(--red)";
-  document.getElementById("connLabel").textContent = ok ? "Live" : "Offline";
-  document.getElementById("connLabel").style.color = ok ? "var(--green)" : "var(--red)";
+  document.getElementById('connDot').style.background = ok ? 'var(--green)' : 'var(--red)';
+  document.getElementById('connLabel').textContent     = ok ? 'Live' : 'Offline';
+  document.getElementById('connLabel').style.color     = ok ? 'var(--green)' : 'var(--red)';
 }
 
-// ── Load agents ───────────────────────────────────────────────
 async function loadAgents() {
   try {
     const r = await fetch(`${API}/agents`);
-    const data = await r.json();
-    renderAgents(data.agents || []);
+    const d = await r.json();
+    renderDashAgents(d.agents || []);
   } catch(e) {
-    // Show default agents if API not running
-    renderAgents([
-      {name:"PlannerAgent", status:"idle"}, {name:"ResearchAgent", status:"idle"},
-      {name:"WriterAgent", status:"idle"}, {name:"FactCheckerAgent", status:"idle"},
-      {name:"EditorAgent", status:"idle"}
+    renderDashAgents([
+      {name:'PlannerAgent',status:'idle'},{name:'ResearchAgent',status:'idle'},
+      {name:'WriterAgent',status:'idle'},{name:'FactCheckerAgent',status:'idle'},
+      {name:'EditorAgent',status:'idle'}
     ]);
   }
 }
 
-function renderAgents(agents) {
-  const grid = document.getElementById("agentsGrid");
-  grid.innerHTML = agents.map(a => `
+function renderDashAgents(agents) {
+  document.getElementById('agentsGrid').innerHTML = agents.map(a => `
     <div class="agent-card ${a.status}" id="agent-${a.name}">
-      <div class="agent-icon">${agentIcons[a.name] || "🤖"}</div>
-      <div class="agent-name">${a.name.replace("Agent","")}</div>
-      <div class="agent-status status-${a.status}">${a.status}</div>
+      <div class="agent-icon">${defaultAgentIcons[a.name] || '🤖'}</div>
+      <div class="agent-name">${a.name.replace('Agent','')}</div>
+      <div class="agent-status-badge s-${a.status}">${a.status}</div>
     </div>
-  `).join("");
+  `).join('');
 }
 
 function setAgentStatus(name, status) {
   const el = document.getElementById(`agent-${name}`);
   if (!el) return;
   el.className = `agent-card ${status}`;
-  el.querySelector(".agent-status").className = `agent-status status-${status}`;
-  el.querySelector(".agent-status").textContent = status;
+  el.querySelector('.agent-status-badge').className   = `agent-status-badge s-${status}`;
+  el.querySelector('.agent-status-badge').textContent = status;
 }
 
-// ── Submit goal ───────────────────────────────────────────────
 async function submitGoal() {
-  const goal = document.getElementById("goalInput").value.trim();
+  const goal = document.getElementById('goalInput').value.trim();
   if (!goal) return;
-
-  const btn = document.getElementById("runBtn");
-  btn.disabled = true;
-  btn.textContent = "⏳ Running...";
-  document.getElementById("resultBox").className = "result-box empty";
-  document.getElementById("resultBox").textContent = "Agents are working...";
-  setProgress(10, "Planning...");
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true; btn.textContent = '⏳ Running...';
+  document.getElementById('resultBox').className   = 'result-box empty';
+  document.getElementById('resultBox').textContent = 'Agents are working...';
+  setProgress(10, 'Planning...');
   addFeedItem(`🚀 New goal: ${goal}`);
 
-  // Animate agents as working
-  const agentOrder = ["PlannerAgent","ResearchAgent","WriterAgent","FactCheckerAgent","EditorAgent"];
-  let delay = 0;
-  agentOrder.forEach((name, i) => {
-    setTimeout(() => setAgentStatus(name, "working"), delay);
-    delay += 800;
-  });
+  const order = ['PlannerAgent','ResearchAgent','WriterAgent','FactCheckerAgent','EditorAgent'];
+  let d = 0;
+  order.forEach(n => { setTimeout(() => setAgentStatus(n,'working'), d); d += 800; });
 
   try {
-    setProgress(20, "Submitting to AgentOS...");
+    setProgress(20, 'Submitting to AgentOS...');
     const r = await fetch(`${API}/tasks/submit`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({goal})
     });
-
-    if (!r.ok) throw new Error("API error");
+    if (!r.ok) throw new Error();
     const data = await r.json();
-    setProgress(100, "Complete!");
-
-    // Mark all agents done
-    agentOrder.forEach(name => setAgentStatus(name, "done"));
-
-    // Show result
-    const resultEl = document.getElementById("resultBox");
-    resultEl.className = "result-box";
-    resultEl.textContent = data.result_preview || "Task completed successfully.";
-
+    setProgress(100,'Complete!');
+    order.forEach(n => setAgentStatus(n,'done'));
+    document.getElementById('resultBox').className   = 'result-box';
+    document.getElementById('resultBox').textContent = data.result_preview || 'Task completed.';
     addFeedItem(`✅ Task complete — ${data.agents_used} agents used`);
-    taskCount++;
-    document.getElementById("statTasks").textContent = taskCount;
+    taskCount++; document.getElementById('statTasks').textContent = taskCount;
     loadTasks();
-
   } catch(e) {
-    // Demo mode — show fake result
-    setProgress(100, "Demo complete!");
-    agentOrder.forEach(name => setAgentStatus(name, "done"));
-
-    const demoResult = `Artificial Intelligence: Reshaping Our World
-
-AI has emerged as the defining technology of the 21st century. Investment has surged 300% since 2020, reflecting a fundamental shift in how businesses and governments view the technology.
-
-Large language models now exceed human performance on many academic benchmarks. The global AI market is projected to reach $1.8 trillion by 2030.
-
-Industries from healthcare to finance are being redesigned around AI capabilities. Yet questions of bias, privacy, and job displacement demand urgent policy responses.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Researched by ResearchAgent
-✓ Written by WriterAgent  
-✓ Verified by FactCheckerAgent
-✓ Edited by EditorAgent
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[Demo mode — start server for real AI output]`;
-
-    document.getElementById("resultBox").className = "result-box";
-    document.getElementById("resultBox").textContent = demoResult;
-    addFeedItem("✅ Demo task complete — 5 agents collaborated");
-    taskCount++;
-    document.getElementById("statTasks").textContent = taskCount;
+    setProgress(100,'Demo complete!');
+    order.forEach(n => setAgentStatus(n,'done'));
+    document.getElementById('resultBox').className   = 'result-box';
+    document.getElementById('resultBox').textContent = `Artificial Intelligence: Reshaping Our World\n\nAI has emerged as the defining technology of the 21st century. Investment has surged 300% since 2020.\n\nLarge language models now exceed human performance on many academic benchmarks. The global AI market is projected to reach $1.8 trillion by 2030.\n\n━━━━━━━━━━━━━━━━━\n✓ Researched by ResearchAgent\n✓ Written by WriterAgent\n✓ Verified by FactCheckerAgent\n✓ Edited by EditorAgent\n━━━━━━━━━━━━━━━━━\n[Demo mode — start server for real output]`;
+    addFeedItem('✅ Demo task complete — 5 agents collaborated');
+    taskCount++; document.getElementById('statTasks').textContent = taskCount;
   }
 
-  btn.disabled = false;
-  btn.textContent = "▶ Run Agents";
-  setTimeout(() => agentOrder.forEach(name => setAgentStatus(name, "idle")), 3000);
+  btn.disabled = false; btn.textContent = '▶ Run Agents';
+  setTimeout(() => order.forEach(n => setAgentStatus(n,'idle')), 3000);
 }
 
-// ── Live feed ─────────────────────────────────────────────────
 function addFeedItem(msg) {
-  const feed = document.getElementById("feed");
-  const item = document.createElement("div");
-  item.className = "feed-item";
-  const time = new Date().toLocaleTimeString();
-  item.innerHTML = `<span>${time}</span> ${msg}`;
+  const feed = document.getElementById('feed');
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `<span class="feed-time">${new Date().toLocaleTimeString()}</span> ${msg}`;
   feed.insertBefore(item, feed.firstChild);
   if (feed.children.length > 30) feed.removeChild(feed.lastChild);
 }
 
-// ── Progress ──────────────────────────────────────────────────
 function setProgress(pct, label) {
-  document.getElementById("progressBar").style.width = pct + "%";
-  document.getElementById("progressLabel").textContent = label;
+  document.getElementById('progressBar').style.width     = pct + '%';
+  document.getElementById('progressLabel').textContent   = label;
 }
 
-// ── Stats ─────────────────────────────────────────────────────
 async function refreshStats() {
   try {
     const r = await fetch(`${API}/resources/usage`);
-    const data = await r.json();
-    document.getElementById("statCalls").textContent = data.total_calls || 0;
-    document.getElementById("statCost").textContent = "$" + (data.total_cost_usd || 0).toFixed(4);
+    const d = await r.json();
+    document.getElementById('statCalls').textContent = d.total_calls || 0;
+    document.getElementById('statCost').textContent  = '$' + (d.total_cost_usd||0).toFixed(4);
     const mr = await fetch(`${API}/messages`);
     const md = await mr.json();
-    document.getElementById("statMsgs").textContent = (md.messages || []).length;
+    document.getElementById('statMsgs').textContent = (md.messages||[]).length;
   } catch(e) {}
 }
 
-// ── Task history ──────────────────────────────────────────────
 async function loadTasks() {
   try {
     const r = await fetch(`${API}/tasks`);
-    const data = await r.json();
-    const tasks = data.tasks || [];
-    const el = document.getElementById("taskHistory");
+    const d = await r.json();
+    const tasks = d.tasks || [];
+    const el = document.getElementById('taskHistory');
     if (!tasks.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">No tasks yet</div>'; return; }
     el.innerHTML = tasks.slice(-5).reverse().map(t => `
       <div class="task-item">
-        <div class="task-goal">${t.goal}</div>
-        <div class="task-meta">
-          <span class="badge badge-${t.status === 'DONE' ? 'done' : t.status === 'FAILED' ? 'failed' : 'running'}">
-            ${t.status}
-          </span>
-          &nbsp;${t.subtasks?.length || 0} agents
+        <div class="task-item-goal">${t.goal}</div>
+        <div class="task-item-meta">
+          <span class="badge badge-${t.status==='DONE'?'done':t.status==='FAILED'?'failed':'running'}">${t.status}</span>
+          &nbsp;${t.subtasks?.length||0} agents
         </div>
       </div>
-    `).join("");
+    `).join('');
   } catch(e) {}
 }
 
-// ── Memory ────────────────────────────────────────────────────
 async function loadMemory() {
   try {
     const r = await fetch(`${API}/memory/all`);
-    const data = await r.json();
-    const mem = data.memory || {};
-    const el = document.getElementById("memoryView");
+    const d = await r.json();
+    const mem = d.memory || {};
+    const el  = document.getElementById('memoryView');
     const keys = Object.keys(mem);
     if (!keys.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Memory empty</div>'; return; }
     el.innerHTML = keys.slice(-6).map(k => `
-      <div class="mem-item" title="${String(mem[k]).substring(0,200)}">
-        <b>${k}</b>: ${String(mem[k]).substring(0,50)}...
-      </div>
-    `).join("");
+      <div class="mem-item" title="${String(mem[k]).substring(0,200)}"><b>${k}</b>: ${String(mem[k]).substring(0,50)}...</div>
+    `).join('');
   } catch(e) {}
 }
-
-// Enter key to submit
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("goalInput")?.addEventListener("keypress", e => {
-    if (e.key === "Enter") submitGoal();
-  });
-});
 </script>
 </body>
 </html>
