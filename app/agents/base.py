@@ -118,7 +118,7 @@ class BaseAgent:
         for attempt in range(max_retries):
             try:
                 model = genai.GenerativeModel(
-                    model_name="gemini-1.5-flash",
+                    model_name="gemini-2.0-flash",
                     system_instruction=(
                         f"You are {self.name}. {self.role}\n\n"
                         "Always provide detailed, well-structured, comprehensive responses. "
