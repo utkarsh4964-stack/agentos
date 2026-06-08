@@ -1,12 +1,12 @@
 import time
-from groq import Groq
-from app.memory.memory_store import MemoryStore
-from app.resources.resource_manager import ResourceManager
 import os
 from dotenv import load_dotenv
+from app.memory.memory_store import MemoryStore
+from app.resources.resource_manager import ResourceManager
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 class BaseAgent:
     def __init__(self, name: str, role: str, goal: str = ""):
@@ -61,7 +61,6 @@ class BaseAgent:
 
     def _build_prompt(self, task: str, context: str = "",
                       search_context: str = "") -> str:
-        # ── FIX: strong system-level instruction for detailed output ──
         prompt = (
             f"You are {self.name}. Your role: {self.role}.\n\n"
             "IMPORTANT INSTRUCTIONS:\n"
@@ -90,17 +89,71 @@ class BaseAgent:
         return ""
 
     def _call_ai_with_retry(self, prompt: str, max_retries: int = 3) -> str:
+        # Try Gemini first
+        if GEMINI_API_KEY:
+            result = self._call_gemini(prompt, max_retries)
+            if result and not result.startswith(f"[{self.name}] Failed"):
+                return result
+            print(f"[{self.name}] Gemini failed, falling back to Groq...")
+
+        # Fallback to Groq
+        if GROQ_API_KEY:
+            result = self._call_groq(prompt, max_retries)
+            if result and not result.startswith(f"[{self.name}] Failed"):
+                return result
+
+        # Last resort: demo response
+        print(f"[{self.name}] All providers failed, using demo response.")
+        return self._demo_response(prompt)
+
+    def _call_gemini(self, prompt: str, max_retries: int = 3) -> str:
+        try:
+            import google.generativeai as genai
+        except ImportError:
+            print(f"[{self.name}] google-generativeai not installed. Run: pip install google-generativeai")
+            return f"[{self.name}] Failed: Gemini SDK not installed."
+
+        genai.configure(api_key=GEMINI_API_KEY)
+
         for attempt in range(max_retries):
             try:
-                if not GROQ_API_KEY:
-                    return self._demo_response(prompt)
+                model = genai.GenerativeModel(
+                    model_name="gemini-1.5-flash",
+                    system_instruction=(
+                        f"You are {self.name}. {self.role}\n\n"
+                        "Always provide detailed, well-structured, comprehensive responses. "
+                        "Use headings and sections. Never cut your response short. "
+                        "Give complete, publication-ready output."
+                    )
+                )
+                response = model.generate_content(
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        max_output_tokens=8000,
+                        temperature=0.7,
+                    )
+                )
+                self.resources.log_call(self.name, tokens_used=500)
+                print(f"[{self.name}] ✓ Gemini responded")
+                return response.text
+            except Exception as e:
+                print(f"[{self.name}] Gemini attempt {attempt+1} failed: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
+
+        return f"[{self.name}] Failed: Gemini unavailable."
+
+    def _call_groq(self, prompt: str, max_retries: int = 3) -> str:
+        from groq import Groq
+
+        for attempt in range(max_retries):
+            try:
                 client = Groq(api_key=GROQ_API_KEY)
                 response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[
                         {
                             "role": "system",
-                            # ── FIX: system prompt demands detailed output ──
                             "content": (
                                 f"You are {self.name}. {self.role}\n\n"
                                 "Always provide detailed, well-structured, comprehensive responses. "
@@ -110,19 +163,18 @@ class BaseAgent:
                         },
                         {"role": "user", "content": prompt}
                     ],
-                    # ── FIX: was 1500, now 8000 for full detailed responses ──
                     max_tokens=8000,
                     temperature=0.7,
                 )
                 self.resources.log_call(self.name, tokens_used=500)
+                print(f"[{self.name}] ✓ Groq responded")
                 return response.choices[0].message.content
             except Exception as e:
-                print(f"[{self.name}] Attempt {attempt+1} failed: {e}")
+                print(f"[{self.name}] Groq attempt {attempt+1} failed: {e}")
                 if attempt < max_retries - 1:
                     time.sleep(2 ** attempt)
-                else:
-                    self.status = "failed"
-                    return f"[{self.name}] Failed: {str(e)}"
+
+        return f"[{self.name}] Failed: Groq unavailable."
 
     def _demo_response(self, prompt: str) -> str:
         if "planner" in self.name.lower():
@@ -157,6 +209,5 @@ class BaseAgent:
             "name": self.name,
             "role": self.role,
             "status": self.status,
-            # ── FIX: was [:100], now shows full preview ──
             "last_output_preview": self._last_output[:500] if self._last_output else ""
         }

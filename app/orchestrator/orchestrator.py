@@ -68,13 +68,11 @@ class Orchestrator:
         planner = registry.get("PlannerAgent")
         plan_text = planner.run(f"Break this goal into exactly 4 numbered steps: {goal}")
 
-        # Parse the plan into subtasks
         subtasks = []
         lines = [l.strip() for l in plan_text.split("\n") if l.strip()]
         steps = [l for l in lines if l and (l[0].isdigit() or l.startswith("-"))]
 
         if len(steps) < 2:
-            # Fallback: create default pipeline
             steps = [
                 "1. Research the topic and gather key facts",
                 "2. Write a comprehensive draft",
@@ -96,7 +94,7 @@ class Orchestrator:
             )
             subtasks.append(sub)
             prev_id = sub.id
-            self._emit(f"Subtask {i+1}: '{step_text[:50]}' → {agent_name}")
+            self._emit(f"Subtask {i+1}: '{step_text}' → {agent_name}")
 
         return subtasks
 
@@ -108,7 +106,6 @@ class Orchestrator:
         self._db.save_task(task)
         self._emit(f"🚀 Starting task [{task.id}]: {goal}")
 
-        # Plan
         subtasks = self.plan(goal)
         task.subtasks = subtasks
         self._db.save_task(task)
@@ -118,14 +115,13 @@ class Orchestrator:
 
         previous_result = ""
 
-        # Execute each subtask in order
         for i, subtask in enumerate(subtasks):
             subtask.status = TaskStatus.IN_PROGRESS
             subtask.started_at = datetime.now().isoformat()
-            self._emit(f"▶ [{subtask.assigned_to}] Working on: {subtask.description[:60]}")
+            self._emit(f"▶ [{subtask.assigned_to}] Working on: {subtask.description}")
 
             if on_update:
-                on_update(f"[{subtask.assigned_to}] {subtask.description[:60]}...")
+                on_update(f"[{subtask.assigned_to}] {subtask.description}...")
 
             agent = registry.get(subtask.assigned_to)
             if not agent:
@@ -133,12 +129,10 @@ class Orchestrator:
                 self._db.save_task(task)
                 continue
 
-            # Pass previous result as context
             task_input = subtask.description
             if previous_result:
                 task_input += f"\n\nPrevious agent output:\n{previous_result}"
 
-            # Run with retry
             result = self._run_with_retry(agent, task_input)
             subtask.result = result
             subtask.status = TaskStatus.DONE
@@ -147,7 +141,6 @@ class Orchestrator:
             self._db.save_task(task)
             self._emit(f"✓ [{subtask.assigned_to}] Done")
 
-        # Final result is the last agent's output
         task.final_result = previous_result
         task.status = TaskStatus.DONE
         task.completed_at = datetime.now().isoformat()
@@ -167,7 +160,6 @@ class Orchestrator:
             except Exception as e:
                 self._emit(f"⚠ {agent.name} attempt {attempt+1} failed: {e}")
                 time.sleep(1)
-        # Last resort: try a different agent
         self._emit(f"🔄 Reassigning {agent.name}'s task...")
         from app.agents.registry import AgentRegistry
         backup = AgentRegistry().get("ResearchAgent")
@@ -184,7 +176,7 @@ class Orchestrator:
                     "description": s.description,
                     "assigned_to": s.assigned_to,
                     "status": s.status,
-                    "result_preview": s.result[:100] if s.result else ""
+                    "result_preview": s.result if s.result else ""
                 }
                 for s in task.subtasks
             ],
@@ -208,4 +200,4 @@ class Orchestrator:
         return [self._task_to_status(task) for task in db.get_all_tasks()]
 
     def get_live_updates(self) -> List[dict]:
-        return self._live_updates[-50:]  # last 50 updates
+        return self._live_updates[-50:]
