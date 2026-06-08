@@ -98,7 +98,8 @@ async def submit_task(req: GoalRequest, x_api_key: Optional[str] = Header(None))
             "task_id": task.id,
             "status": task.status,
             "goal": task.goal,
-            "result_preview": task.final_result[:300] if task.final_result else "",
+            # ── FIX: was [:300], now returns full result ──
+            "result_preview": task.final_result if task.final_result else "",
             "agents_used": len(task.subtasks)
         }
     return {"error": "Task failed"}
@@ -252,8 +253,6 @@ async def run_custom_pipeline(req: PipelineRunRequest, x_api_key: Optional[str] 
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     from app.database import SQLiteDatabase
-    import time
-
     db = SQLiteDatabase()
     custom_agents = db.get_custom_agents(x_api_key)
 

@@ -27,21 +27,15 @@ class BaseAgent:
             self.status = "idle"
             return f"[{self.name}] Rate limit hit. Try again in 60 seconds."
 
-        # Get memory context
         context = self._get_memory_context(task)
 
-        # Web search if this agent should search
         search_context = ""
         if self._should_use_search():
             search_context = self._do_web_search(task)
 
-        # Build prompt
         prompt = self._build_prompt(task, context, search_context)
-
-        # Call AI
         result = self._call_ai_with_retry(prompt)
 
-        # Save to memory
         mem_key = f"{self.name}_{int(time.time())}"
         self.memory.write(mem_key, result, long_term=True)
         self._last_output = result
@@ -50,12 +44,10 @@ class BaseAgent:
         return result
 
     def _should_use_search(self) -> bool:
-        """ResearchAgent and ScoutAgent always search."""
         search_agents = ["research", "scout", "search", "find"]
         return any(kw in self.name.lower() for kw in search_agents)
 
     def _do_web_search(self, task: str) -> str:
-        """Perform web search and return results."""
         try:
             from app.search import web_search, should_search
             if should_search(task):
@@ -69,7 +61,15 @@ class BaseAgent:
 
     def _build_prompt(self, task: str, context: str = "",
                       search_context: str = "") -> str:
-        prompt = f"You are {self.name}. Your role: {self.role}.\n\n"
+        # ── FIX: strong system-level instruction for detailed output ──
+        prompt = (
+            f"You are {self.name}. Your role: {self.role}.\n\n"
+            "IMPORTANT INSTRUCTIONS:\n"
+            "- Provide a detailed, thorough, and comprehensive response.\n"
+            "- Use clear headings and sections where appropriate.\n"
+            "- Never truncate or summarize — give the full, complete output.\n"
+            "- Minimum response length: 300 words unless the task is very simple.\n\n"
+        )
         if self.goal:
             prompt += f"Your goal: {self.goal}\n\n"
         if search_context:
@@ -77,7 +77,7 @@ class BaseAgent:
             prompt += "Use the above current web data in your response.\n\n"
         if context:
             prompt += f"Relevant memory context:\n{context}\n\n"
-        prompt += f"Task: {task}\n\nRespond clearly and completely."
+        prompt += f"Task: {task}\n\nProvide your full, detailed response below:"
         return prompt
 
     def _get_memory_context(self, task: str) -> str:
@@ -98,11 +98,21 @@ class BaseAgent:
                 response = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[
-                        {"role": "system",
-                         "content": f"You are {self.name}. {self.role}"},
+                        {
+                            "role": "system",
+                            # ── FIX: system prompt demands detailed output ──
+                            "content": (
+                                f"You are {self.name}. {self.role}\n\n"
+                                "Always provide detailed, well-structured, comprehensive responses. "
+                                "Use headings and sections. Never cut your response short. "
+                                "Give complete, publication-ready output."
+                            )
+                        },
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=1500,
+                    # ── FIX: was 1500, now 8000 for full detailed responses ──
+                    max_tokens=8000,
+                    temperature=0.7,
                 )
                 self.resources.log_call(self.name, tokens_used=500)
                 return response.choices[0].message.content
@@ -126,19 +136,16 @@ class BaseAgent:
         else:
             return "Content polished and ready."
 
-    def save_to_memory(self, key: str, value: str,
-                       long_term: bool = False):
+    def save_to_memory(self, key: str, value: str, long_term: bool = False):
         self.memory.write(key, value, long_term)
 
     def recall_from_memory(self, query: str) -> list:
         return self.memory.search(query)
 
-    def send_message(self, to_agent: str, content: str,
-                     msg_type: str = "TASK"):
+    def send_message(self, to_agent: str, content: str, msg_type: str = "TASK"):
         from app.comms.message_bus import MessageBus, MessageType
         bus = MessageBus()
-        return bus.send(self.name, to_agent, content,
-                        MessageType(msg_type))
+        return bus.send(self.name, to_agent, content, MessageType(msg_type))
 
     def receive_messages(self):
         from app.comms.message_bus import MessageBus
@@ -150,6 +157,6 @@ class BaseAgent:
             "name": self.name,
             "role": self.role,
             "status": self.status,
-            "last_output_preview": self._last_output[:100]
-            if self._last_output else ""
+            # ── FIX: was [:100], now shows full preview ──
+            "last_output_preview": self._last_output[:500] if self._last_output else ""
         }
