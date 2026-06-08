@@ -1,962 +1,768 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentOS — Pipeline Builder</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ─── TOKENS ─────────────────────────────────────────── */
-:root {
-  --radius: 10px;
-  --radius-sm: 6px;
-  --transition: 0.18s ease;
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* Light */
-  --bg:       #fafafa;
-  --surface:  #ffffff;
-  --surface2: #f4f4f5;
-  --border:   #e4e4e7;
-  --border2:  #d4d4d8;
-  --text:     #09090b;
-  --text2:    #52525b;
-  --text3:    #a1a1aa;
-  --accent:   #18181b;
-  --accent-fg:#ffffff;
-  --green:    #16a34a;
-  --green-bg: #f0fdf4;
-  --green-border: #bbf7d0;
-  --blue:     #2563eb;
-  --blue-bg:  #eff6ff;
-  --blue-border:#bfdbfe;
-  --red:      #dc2626;
-  --red-bg:   #fef2f2;
-  --amber:    #d97706;
-  --amber-bg: #fffbeb;
-  --purple:   #7c3aed;
-  --purple-bg:#f5f3ff;
-  --purple-border:#ddd6fe;
-  --shadow:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-}
+  :root {
+    --bg: #070810;
+    --surface: #0E1120;
+    --card: #131627;
+    --border: #1E2340;
+    --border-bright: #2E3460;
+    --accent: #4F6EF7;
+    --accent-glow: rgba(79,110,247,0.15);
+    --teal: #00E5C4;
+    --teal-glow: rgba(0,229,196,0.12);
+    --orange: #FF7043;
+    --text: #E2E8FF;
+    --muted: #5A6080;
+    --muted2: #8890B0;
+    --green: #00C896;
+    --red: #FF4560;
+    --yellow: #FFB830;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
 
-[data-theme="dark"] {
-  --bg:       #09090b;
-  --surface:  #111113;
-  --surface2: #18181b;
-  --border:   #27272a;
-  --border2:  #3f3f46;
-  --text:     #fafafa;
-  --text2:    #a1a1aa;
-  --text3:    #52525b;
-  --accent:   #fafafa;
-  --accent-fg:#09090b;
-  --green:    #4ade80;
-  --green-bg: #052e16;
-  --green-border:#14532d;
-  --blue:     #60a5fa;
-  --blue-bg:  #0c1a3a;
-  --blue-border:#1e3a6e;
-  --red:      #f87171;
-  --red-bg:   #3b0a0a;
-  --amber:    #fbbf24;
-  --amber-bg: #1c1400;
-  --purple:   #a78bfa;
-  --purple-bg:#1e0a3c;
-  --purple-border:#3b1d6e;
-  --shadow:   0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md:0 4px 16px rgba(0,0,0,0.5);
-}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-/* ─── RESET ──────────────────────────────────────────── */
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:'Geist',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  font-size:14px;
-  line-height:1.5;
-  -webkit-font-smoothing:antialiased;
-}
-button{font-family:inherit}
-input,textarea,select{font-family:'Geist',sans-serif}
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,110,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,110,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-/* ─── TOPBAR ─────────────────────────────────────────── */
-.topbar {
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.topbar-left { display:flex; align-items:center; gap:16px; }
-.logo {
-  display:flex; align-items:center; gap:8px;
-  font-size:15px; font-weight:600; color:var(--text);
-  text-decoration:none;
-}
-.logo-dot {
-  width:22px; height:22px; border-radius:6px;
-  background:var(--text); display:flex; align-items:center;
-  justify-content:center; font-size:11px; flex-shrink:0;
-}
-[data-theme="dark"] .logo-dot { background:var(--text); }
-.logo-dot span { color:var(--bg); font-weight:700; }
-.badge {
-  font-size:10px; font-weight:500; padding:2px 7px;
-  border-radius:20px; border:1px solid var(--border);
-  color:var(--text3); letter-spacing:.02em;
-}
-.topbar-nav { display:flex; gap:2px; }
-.topbar-nav a {
-  padding:5px 10px; border-radius:var(--radius-sm);
-  font-size:13px; color:var(--text2); text-decoration:none;
-  transition:background var(--transition), color var(--transition);
-}
-.topbar-nav a:hover { background:var(--surface2); color:var(--text); }
-.topbar-right { display:flex; align-items:center; gap:8px; }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(7,8,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
 
-/* ─── ICON BUTTON ────────────────────────────────────── */
-.icon-btn {
-  width:32px; height:32px; border-radius:var(--radius-sm);
-  border:1px solid var(--border); background:var(--surface);
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; color:var(--text2); font-size:14px;
-  transition:background var(--transition), border-color var(--transition);
-}
-.icon-btn:hover { background:var(--surface2); border-color:var(--border2); }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+  .logo-badge { font-size: 10px; font-family: var(--font-mono); background: var(--teal-glow); border: 1px solid var(--teal); color: var(--teal); padding: 2px 8px; border-radius: 4px; }
 
-/* ─── WS STATUS ──────────────────────────────────────── */
-.ws-pill {
-  display:flex; align-items:center; gap:6px;
-  padding:4px 10px; border-radius:20px;
-  border:1px solid var(--border); font-size:12px; color:var(--text2);
-}
-.ws-dot {
-  width:6px; height:6px; border-radius:50%;
-  background:var(--amber); flex-shrink:0;
-}
-.ws-dot.on  { background:var(--green); }
-.ws-dot.err { background:var(--red); }
+  nav { display: flex; gap: 4px; margin-left: 24px; }
+  nav a { font-size: 13px; font-weight: 600; color: var(--muted2); text-decoration: none; padding: 6px 14px; border-radius: 6px; transition: all 0.2s; }
+  nav a:hover { color: var(--text); background: var(--card); }
+  nav a.active { color: var(--accent); background: var(--accent-glow); }
 
-/* ─── PRO BUTTON ─────────────────────────────────────── */
-.btn-upgrade {
-  padding:5px 14px; border-radius:var(--radius-sm);
-  background:var(--text); color:var(--bg);
-  font-size:13px; font-weight:500; border:none; cursor:pointer;
-  transition:opacity var(--transition);
-}
-.btn-upgrade:hover { opacity:.85; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 
-/* ─── LAYOUT ─────────────────────────────────────────── */
-.workspace {
-  display:grid;
-  grid-template-columns:320px 1fr;
-  height:calc(100vh - 52px);
-  overflow:hidden;
-}
-.panel {
-  overflow-y:auto;
-  scrollbar-width:thin;
-  scrollbar-color:var(--border) transparent;
-}
-.panel::-webkit-scrollbar { width:4px; }
-.panel::-webkit-scrollbar-track { background:transparent; }
-.panel::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  .api-key-wrap { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+  .api-key-wrap label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+  .api-key-wrap input { background: none; border: none; outline: none; color: var(--teal); font-family: var(--font-mono); font-size: 12px; width: 180px; }
 
-/* ─── LEFT PANEL ─────────────────────────────────────── */
-.left-panel {
-  border-right:1px solid var(--border);
-  display:flex; flex-direction:column;
-  background:var(--surface);
-}
-.left-scroll { padding:16px; display:flex; flex-direction:column; gap:12px; flex:1; overflow-y:auto; }
+  .page { position: relative; z-index: 1; display: grid; grid-template-columns: 380px 1fr; gap: 0; height: calc(100vh - 56px); }
 
-/* ─── SECTION ────────────────────────────────────────── */
-.section-label {
-  font-size:11px; font-weight:500; color:var(--text3);
-  letter-spacing:.06em; text-transform:uppercase;
-  margin-bottom:8px;
-}
+  .left-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
 
-/* ─── TEMPLATES ──────────────────────────────────────── */
-.template-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.tpl {
-  padding:10px; border-radius:var(--radius-sm);
-  border:1px solid var(--border); background:var(--bg);
-  cursor:pointer; transition:border-color var(--transition), background var(--transition);
-  text-align:left;
-}
-.tpl:hover { border-color:var(--border2); background:var(--surface2); }
-.tpl-icon { font-size:16px; margin-bottom:5px; display:block; }
-.tpl-name { font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:2px; }
-.tpl-meta { font-size:11px; color:var(--text3); }
+  .panel-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .panel-title { font-size: 13px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 1.5px; }
 
-/* ─── DIVIDER ────────────────────────────────────────── */
-.divider {
-  height:1px; background:var(--border); margin:4px 0;
-}
+  .agent-form { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
 
-/* ─── INPUTS ─────────────────────────────────────────── */
-.field { margin-bottom:8px; }
-.field-label {
-  display:block; font-size:12px; font-weight:500;
-  color:var(--text2); margin-bottom:5px;
-}
-.input {
-  width:100%; padding:8px 11px;
-  border:1px solid var(--border); border-radius:var(--radius-sm);
-  background:var(--bg); color:var(--text);
-  font-size:13px; outline:none;
-  transition:border-color var(--transition), box-shadow var(--transition);
-}
-.input:focus {
-  border-color:var(--blue);
-  box-shadow:0 0 0 3px color-mix(in srgb, var(--blue) 15%, transparent);
-}
-.textarea { resize:vertical; min-height:72px; line-height:1.5; }
+  .form-row { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); }
 
-/* ─── BUTTONS ────────────────────────────────────────── */
-.btn {
-  display:inline-flex; align-items:center; justify-content:center;
-  gap:6px; padding:7px 14px; border-radius:var(--radius-sm);
-  font-size:13px; font-weight:500; cursor:pointer;
-  transition:all var(--transition); border:none;
-  white-space:nowrap;
-}
-.btn-primary {
-  background:var(--text); color:var(--bg); width:100%;
-}
-.btn-primary:hover { opacity:.88; }
-.btn-primary:disabled { opacity:.35; cursor:not-allowed; }
-.btn-ghost {
-  background:transparent; color:var(--text2);
-  border:1px solid var(--border); 
-}
-.btn-ghost:hover { background:var(--surface2); color:var(--text); border-color:var(--border2); }
-.btn-run {
-  width:100%; background:var(--text); color:var(--bg);
-  padding:10px; font-size:14px; font-weight:600;
-  border-radius:var(--radius-sm); border:none; cursor:pointer;
-  transition:opacity var(--transition);
-}
-.btn-run:hover { opacity:.88; }
-.btn-run:disabled { opacity:.35; cursor:not-allowed; }
-.btn-sm { padding:4px 10px; font-size:12px; }
+  .form-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-family: var(--font-display); outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%; }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .form-input::placeholder { color: var(--muted); }
+  textarea.form-input { resize: none; height: 80px; line-height: 1.5; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 80px; gap: 10px; }
 
-/* ─── AGENT CHIP ─────────────────────────────────────── */
-.agent-chip {
-  display:flex; align-items:flex-start; gap:10px;
-  padding:10px 12px; border-radius:var(--radius-sm);
-  border:1px solid var(--border); background:var(--bg);
-  margin-bottom:6px;
-}
-.chip-num {
-  width:20px; height:20px; border-radius:5px;
-  background:var(--text); color:var(--bg);
-  font-size:11px; font-weight:700;
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; margin-top:1px;
-}
-.chip-body { flex:1; min-width:0; }
-.chip-name { font-size:13px; font-weight:600; color:var(--text); }
-.chip-instr { font-size:12px; color:var(--text2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.chip-del {
-  background:none; border:none; cursor:pointer;
-  color:var(--text3); font-size:16px; line-height:1;
-  padding:0 2px; flex-shrink:0;
-  transition:color var(--transition);
-}
-.chip-del:hover { color:var(--red); }
-.chip-arrow { text-align:center; color:var(--text3); font-size:12px; margin:2px 0; }
+  .btn { border: none; border-radius: 8px; font-family: var(--font-display); font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: white; padding: 11px 20px; font-size: 13px; width: 100%; }
+  .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-danger { background: transparent; border: 1px solid var(--border); color: var(--red); padding: 4px 10px; font-size: 11px; border-radius: 5px; }
+  .btn-danger:hover { background: rgba(255,69,96,0.1); border-color: var(--red); }
+  .btn-clear { background: transparent; border: 1px solid var(--border); color: var(--muted2); padding: 4px 10px; font-size: 11px; border-radius: 5px; cursor: pointer; font-family: var(--font-mono); }
+  .btn-clear:hover { border-color: var(--red); color: var(--red); }
 
-/* ─── RUNS METER ─────────────────────────────────────── */
-.runs-bar-wrap {
-  height:3px; background:var(--surface2); border-radius:2px;
-  margin:6px 0 4px; overflow:hidden;
-}
-.runs-bar { height:100%; border-radius:2px; background:var(--green); transition:width .3s; }
-.runs-bar.warn { background:var(--amber); }
-.runs-bar.danger { background:var(--red); }
-.runs-meta { display:flex; justify-content:space-between; font-size:11px; color:var(--text3); }
+  .pipeline-list { flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 8px; }
 
-/* ─── RIGHT PANEL ────────────────────────────────────── */
-.right-panel {
-  background:var(--bg);
-  display:flex; flex-direction:column; gap:0;
-}
-.right-scroll { padding:20px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; flex:1; }
+  .pipeline-empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .pipeline-empty .empty-icon { font-size: 32px; margin-bottom: 12px; }
 
-/* ─── CARD ───────────────────────────────────────────── */
-.card {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); overflow:hidden;
-}
-.card-head {
-  padding:12px 16px;
-  display:flex; align-items:center; justify-content:space-between;
-  border-bottom:1px solid var(--border);
-}
-.card-title { font-size:13px; font-weight:600; color:var(--text); }
-.card-body { padding:16px; }
-.card-actions { display:flex; gap:6px; }
+  /* Templates link strip */
+  .templates-strip { padding: 10px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .templates-strip-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .templates-strip-link {
+    font-size: 11px; font-family: var(--font-mono); font-weight: 700;
+    color: var(--teal); background: var(--teal-glow); border: 1px solid var(--teal);
+    padding: 4px 12px; border-radius: 5px; text-decoration: none;
+    transition: all .2s;
+  }
+  .templates-strip-link:hover { background: rgba(0,229,196,0.22); }
 
-/* ─── PIPELINE PREVIEW ───────────────────────────────── */
-.flow-wrap {
-  display:flex; gap:0; align-items:center;
-  flex-wrap:nowrap; overflow-x:auto; padding:16px;
-  scrollbar-width:thin;
-}
-.flow-node {
-  flex-shrink:0; min-width:100px; max-width:140px;
-  padding:10px 12px; border-radius:var(--radius-sm);
-  border:1px solid var(--border); background:var(--bg);
-  text-align:center;
-}
-.flow-node-name { font-size:12px; font-weight:600; color:var(--text); }
-.flow-node-sub { font-size:11px; color:var(--text3); margin-top:3px; }
-.flow-arrow { color:var(--text3); padding:0 8px; font-size:18px; flex-shrink:0; }
-.flow-empty { color:var(--text3); font-size:13px; padding:16px; }
+  .agent-pill { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; position: relative; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+  .agent-pill:hover { border-color: var(--border-bright); }
+  .agent-pill.running { border-color: var(--accent); background: rgba(79,110,247,0.05); }
+  .agent-pill.done { border-color: var(--green); background: rgba(0,200,150,0.05); }
+  .agent-pill.failed { border-color: var(--red); }
 
-/* ─── LIVE FEED ──────────────────────────────────────── */
-.feed {
-  font-family:'Geist Mono',monospace;
-  font-size:12px; line-height:1.7;
-  height:200px; overflow-y:auto; padding:12px 16px;
-  scrollbar-width:thin;
-  scrollbar-color:var(--border) transparent;
-}
-.feed-line { display:flex; gap:8px; }
-.feed-ts { color:var(--text3); flex-shrink:0; }
-.feed-agent { color:var(--blue); flex-shrink:0; }
-.feed-msg { color:var(--text2); }
-.feed-msg.ok { color:var(--green); }
-.feed-msg.err { color:var(--red); }
+  .agent-order-badge { width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-mono); color: var(--muted2); flex-shrink: 0; }
+  .agent-pill.running .agent-order-badge { background: var(--accent); color: white; border-color: var(--accent); }
+  .agent-pill.done .agent-order-badge { background: var(--green); color: #000; border-color: var(--green); }
 
-/* ─── OUTPUT ─────────────────────────────────────────── */
-.output {
-  font-family:'Geist Mono',monospace; font-size:13px;
-  line-height:1.7; min-height:120px;
-  white-space:pre-wrap; word-break:break-word;
-  padding:16px; color:var(--text2);
-}
-.output.has-content { color:var(--text); }
+  .agent-pill-info { flex: 1; min-width: 0; }
+  .agent-pill-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .agent-pill-role { font-size: 11px; color: var(--muted2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-mono); }
 
-/* ─── STEP OUTPUTS ───────────────────────────────────── */
-.step-output {
-  padding:12px 16px;
-  border-bottom:1px solid var(--border);
-}
-.step-output:last-child { border-bottom:none; }
-.step-label {
-  font-size:11px; font-weight:600; color:var(--blue);
-  text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
-}
-.step-text {
-  font-size:13px; line-height:1.65; color:var(--text);
-  white-space:pre-wrap; word-break:break-word;
-}
+  .agent-status-indicator { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); flex-shrink: 0; }
+  .status-idle { background: var(--surface); color: var(--muted); }
+  .status-running { background: rgba(79,110,247,0.2); color: var(--accent); animation: pulse 1s infinite; }
+  .status-done { background: rgba(0,200,150,0.15); color: var(--green); }
+  .status-failed { background: rgba(255,69,96,0.15); color: var(--red); }
 
-/* ─── SPINNER ────────────────────────────────────────── */
-@keyframes spin { to { transform:rotate(360deg); } }
-.spinner {
-  width:14px; height:14px; border-radius:50%;
-  border:2px solid var(--border2); border-top-color:var(--text);
-  animation:spin .7s linear infinite; flex-shrink:0;
-}
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .connector { display: flex; justify-content: center; align-items: center; height: 16px; color: var(--border-bright); font-size: 14px; }
 
-/* ─── EMPTY STATE ────────────────────────────────────── */
-.empty-state {
-  text-align:center; padding:32px 16px;
-}
-.empty-icon { font-size:28px; margin-bottom:8px; opacity:.4; }
-.empty-text { font-size:13px; color:var(--text3); }
+  .template-banner {
+    background: rgba(0,229,196,0.08);
+    border: 1px solid var(--teal);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--teal);
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
 
-/* ─── PRO MODAL ──────────────────────────────────────── */
-.modal-backdrop {
-  display:none; position:fixed; inset:0;
-  background:rgba(0,0,0,.5); z-index:999;
-  align-items:center; justify-content:center;
-  backdrop-filter:blur(4px);
-}
-.modal-backdrop.open { display:flex; }
-.modal {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:14px; padding:28px; max-width:400px; width:90%;
-  box-shadow:var(--shadow-md); position:relative;
-}
-.modal-close {
-  position:absolute; top:16px; right:16px;
-  background:none; border:none; cursor:pointer;
-  color:var(--text3); font-size:18px; line-height:1;
-}
-.modal-close:hover { color:var(--text); }
-.modal h2 { font-size:18px; font-weight:600; margin-bottom:4px; }
-.modal p { font-size:13px; color:var(--text2); margin-bottom:16px; }
-.plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
-.plan-card {
-  padding:14px; border-radius:var(--radius-sm);
-  border:1px solid var(--border); text-align:center; cursor:pointer;
-  transition:border-color var(--transition);
-}
-.plan-card:hover { border-color:var(--border2); }
-.plan-card.selected { border-color:var(--blue); background:var(--blue-bg); }
-.plan-price { font-size:22px; font-weight:700; color:var(--text); }
-.plan-period { font-size:12px; color:var(--text3); }
-.plan-save { font-size:11px; font-weight:600; color:var(--green); margin-top:3px; }
-.feature-list { margin-bottom:16px; }
-.feature-item {
-  display:flex; align-items:center; gap:8px;
-  font-size:13px; color:var(--text2); padding:5px 0;
-}
-.feature-item::before {
-  content:''; width:16px; height:16px; border-radius:50%;
-  background:var(--green-bg); border:1px solid var(--green-border);
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8l3.5 3.5L13 4' stroke='%2316a34a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size:12px; background-position:center; background-repeat:no-repeat;
-}
-.modal-cta {
-  width:100%; padding:11px; border-radius:var(--radius-sm);
-  background:var(--text); color:var(--bg);
-  font-size:14px; font-weight:600; border:none; cursor:pointer;
-  transition:opacity var(--transition);
-}
-.modal-cta:hover { opacity:.88; }
-.modal-note { font-size:11px; color:var(--text3); text-align:center; margin-top:8px; }
+  .right-panel { display: flex; flex-direction: column; overflow: hidden; }
 
-/* ─── TOAST ──────────────────────────────────────────── */
-.toast {
-  position:fixed; bottom:20px; right:20px; z-index:1000;
-  background:var(--text); color:var(--bg);
-  padding:10px 16px; border-radius:var(--radius-sm);
-  font-size:13px; font-weight:500;
-  box-shadow:var(--shadow-md);
-  transform:translateY(60px); opacity:0;
-  transition:transform .25s ease, opacity .25s ease;
-  pointer-events:none;
-}
-.toast.show { transform:translateY(0); opacity:1; }
+  .run-bar { padding: 16px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
 
-/* ─── SCROLL AREAS ───────────────────────────────────── */
-.left-panel { overflow:hidden; }
-.left-scroll { overflow-y:auto; }
-.right-scroll { overflow-y:auto; }
+  .goal-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; color: var(--text); font-size: 14px; font-family: var(--font-display); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .goal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .goal-input::placeholder { color: var(--muted); }
+
+  .btn-run { background: linear-gradient(135deg, var(--accent), #7B5CF5); color: white; border: none; border-radius: 10px; padding: 12px 28px; font-size: 14px; font-weight: 800; font-family: var(--font-display); cursor: pointer; transition: all 0.2s; white-space: nowrap; letter-spacing: 0.3px; position: relative; overflow: hidden; }
+  .btn-run::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); opacity: 0; transition: opacity 0.2s; }
+  .btn-run:hover::before { opacity: 1; }
+  .btn-run:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(79,110,247,0.35); }
+  .btn-run:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .progress-track { height: 2px; background: var(--border); position: relative; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--teal)); transition: width 0.6s ease; position: relative; }
+  .progress-fill::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 60px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4)); animation: shimmer 1s infinite; }
+  @keyframes shimmer { 0%{opacity:0} 50%{opacity:1} 100%{opacity:0} }
+
+  .output-area { flex: 1; display: grid; grid-template-rows: 1fr 200px; overflow: hidden; }
+  .output-main { padding: 24px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+
+  .output-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; color: var(--muted); }
+  .output-placeholder .big-icon { font-size: 48px; opacity: 0.4; }
+  .output-placeholder p { font-size: 14px; }
+  .output-placeholder small { font-size: 12px; font-family: var(--font-mono); }
+
+  .step-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-card-header { padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .step-agent-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .step-badge { font-size: 10px; font-family: var(--font-mono); padding: 2px 8px; border-radius: 4px; margin-left: auto; }
+  .step-badge-done { background: rgba(0,200,150,0.15); color: var(--green); }
+  .step-badge-running { background: rgba(79,110,247,0.2); color: var(--accent); animation: pulse 1s infinite; }
+
+  .step-card-body { padding: 16px; font-size: 13px; line-height: 1.75; color: #B0BCDF; white-space: pre-wrap; font-family: var(--font-mono); max-height: 200px; overflow-y: auto; }
+
+  .final-output { background: linear-gradient(135deg, rgba(79,110,247,0.08), rgba(0,229,196,0.05)); border: 1px solid var(--accent); border-radius: 12px; padding: 20px; }
+  .final-output-label { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-mono); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .final-output-text { font-size: 14px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+
+  .live-feed { border-top: 1px solid var(--border); background: var(--surface); padding: 12px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .feed-header { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .feed-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .feed-line { font-size: 11px; font-family: var(--font-mono); color: var(--muted2); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; gap: 10px; }
+  .feed-time { color: var(--muted); flex-shrink: 0; }
+  .feed-msg { color: var(--muted2); }
+  .feed-msg.success { color: var(--green); }
+  .feed-msg.info { color: var(--accent); }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+
+  .copy-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted2); padding: 4px 10px; border-radius: 5px; font-size: 11px; font-family: var(--font-mono); cursor: pointer; transition: all 0.2s; margin-left: auto; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .section-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; font-family: var(--font-mono); padding: 0 0 8px 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; color: var(--text); z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--red); }
+
+  /* Error state banner */
+  .error-banner {
+    background: rgba(255,69,96,0.08);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--red);
+    font-family: var(--font-mono);
+    line-height: 1.6;
+  }
+  .error-banner strong { display: block; margin-bottom: 4px; }
 </style>
 </head>
 <body>
 
-<!-- ══════════════ TOPBAR ══════════════ -->
-<header class="topbar">
-  <div class="topbar-left">
-    <a href="/" class="logo">
-      <div class="logo-dot"><span>A</span></div>
-      AgentOS
-    </a>
-    <span class="badge">Pipeline Builder</span>
-    <nav class="topbar-nav">
-      <a href="/">Home</a>
-      <a href="/dashboard">Dashboard</a>
-      <a href="/docs">API</a>
-    </nav>
-  </div>
-  <div class="topbar-right">
-    <div class="ws-pill">
-      <div class="ws-dot" id="wsDot"></div>
-      <span id="wsLabel">Connecting</span>
+<header>
+  <a class="logo" href="https://agentos-production-5783.up.railway.app/">
+    <div class="logo-icon">🤖</div>
+    <span class="logo-text">AgentOS</span>
+  </a>
+  <span class="logo-badge">PIPELINE BUILDER</span>
+  <nav>
+    <a href="https://agentos-production-5783.up.railway.app/dashboard">Dashboard</a>
+    <a href="https://agentos-production-5783.up.railway.app/pipeline" class="active">Builder</a>
+    <a href="https://agentos-production-5783.up.railway.app/dashboard/templates.html">Templates</a>
+    <a href="https://agentos-production-5783.up.railway.app/docs" target="_blank">API Docs</a>
+  </nav>
+  <div class="header-right">
+    <div class="api-key-wrap">
+      <label>API KEY</label>
+      <input type="password" id="apiKeyInput" placeholder="Enter your API key..." />
     </div>
-    <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme" id="themeBtn">☀</button>
-    <button class="btn-upgrade" onclick="openPro()">Upgrade to Pro</button>
   </div>
 </header>
 
-<!-- ══════════════ WORKSPACE ══════════════ -->
-<div class="workspace">
+<div class="page">
 
-  <!-- ── LEFT ── -->
-  <aside class="left-panel">
-    <div class="left-scroll">
+  <!-- LEFT: Agent Builder -->
+  <div class="left-panel">
 
-      <!-- Templates -->
-      <div>
-        <div class="section-label">Quick start</div>
-        <div class="template-grid">
-          <button class="tpl" onclick="loadTpl('content')">
-            <span class="tpl-icon">📝</span>
-            <span class="tpl-name">Content</span>
-            <span class="tpl-meta">4 agents · research to publish</span>
-          </button>
-          <button class="tpl" onclick="loadTpl('code')">
-            <span class="tpl-icon">💻</span>
-            <span class="tpl-name">Code Review</span>
-            <span class="tpl-meta">3 agents · bugs + security</span>
-          </button>
-          <button class="tpl" onclick="loadTpl('research')">
-            <span class="tpl-icon">🔍</span>
-            <span class="tpl-name">Research</span>
-            <span class="tpl-meta">3 agents · deep analysis</span>
-          </button>
-          <button class="tpl" onclick="loadTpl('email')">
-            <span class="tpl-icon">📧</span>
-            <span class="tpl-name">Cold Email</span>
-            <span class="tpl-meta">3 agents · draft to send</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Add agent -->
-      <div>
-        <div class="section-label">Add agent</div>
-        <div class="field">
-          <label class="field-label">Name</label>
-          <input class="input" id="agentName" placeholder="e.g. Researcher, Editor…"/>
-        </div>
-        <div class="field">
-          <label class="field-label">Instructions</label>
-          <textarea class="input textarea" id="agentInstr" placeholder="What does this agent do? Be specific.&#10;e.g. You are an expert researcher. Analyze the topic and output structured findings."></textarea>
-        </div>
-        <button class="btn btn-ghost" style="width:100%" onclick="addAgent()">
-          + Add to pipeline
-        </button>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Pipeline list -->
-      <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div class="section-label" style="margin:0">Pipeline <span id="agentCount" style="color:var(--text)">· 0 agents</span></div>
-          <button class="btn btn-ghost btn-sm" onclick="clearPipeline()">Clear</button>
-        </div>
-        <div id="pipelineList">
-          <div class="empty-state" style="padding:16px">
-            <div class="empty-icon">⚡</div>
-            <div class="empty-text">Pick a template or add agents above</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Run -->
-      <div>
-        <div class="section-label">Goal</div>
-        <div class="field">
-          <textarea class="input textarea" id="pipelineGoal" rows="4"
-            placeholder="What do you want to accomplish?&#10;&#10;e.g. Write a 500-word blog post about the future of AI agents, optimized for developers."></textarea>
-        </div>
-        <button class="btn-run" id="runBtn" onclick="runPipeline()">
-          Run pipeline →
-        </button>
-        <div id="runningRow" style="display:none;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text2)">
-          <div class="spinner"></div> Pipeline running…
-        </div>
-        <!-- Runs meter -->
-        <div style="margin-top:12px">
-          <div class="runs-bar-wrap"><div class="runs-bar" id="runsBar" style="width:100%"></div></div>
-          <div class="runs-meta">
-            <span id="runsLabel">5 runs left today</span>
-            <span onclick="openPro()" style="cursor:pointer;color:var(--blue)">Upgrade for unlimited →</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </aside>
-
-  <!-- ── RIGHT ── -->
-  <main class="right-panel">
-    <div class="right-scroll">
-
-      <!-- Pipeline flow -->
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">Pipeline</span>
-          <span style="font-size:12px;color:var(--text3)">Each agent's output feeds into the next</span>
-        </div>
-        <div class="flow-wrap" id="flowWrap">
-          <span class="flow-empty">Add agents to see your pipeline here</span>
-        </div>
-      </div>
-
-      <!-- Output -->
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">Output</span>
-          <div class="card-actions">
-            <button class="btn btn-ghost btn-sm" onclick="copyOutput()">Copy</button>
-            <button class="btn btn-ghost btn-sm" onclick="downloadOutput()">Download</button>
-          </div>
-        </div>
-        <div class="output" id="outputBox">Run your pipeline to see the output here.</div>
-      </div>
-
-      <!-- Step outputs -->
-      <div class="card" id="stepsCard" style="display:none">
-        <div class="card-head">
-          <span class="card-title">Step outputs</span>
-        </div>
-        <div id="stepsBody"></div>
-      </div>
-
-      <!-- Live feed -->
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">Live feed</span>
-          <button class="btn btn-ghost btn-sm" onclick="clearFeed()">Clear</button>
-        </div>
-        <div class="feed" id="liveFeed">
-          <div class="feed-line">
-            <span class="feed-ts">--:--:--</span>
-            <span class="feed-msg">AgentOS Pipeline Builder ready</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
-
-</div>
-
-<!-- ══════════════ PRO MODAL ══════════════ -->
-<div class="modal-backdrop" id="proModal" onclick="if(event.target===this)closePro()">
-  <div class="modal">
-    <button class="modal-close" onclick="closePro()">×</button>
-    <h2>AgentOS Pro</h2>
-    <p>Unlimited pipelines, agents, and runs. Ship faster.</p>
-
-    <div class="plan-grid">
-      <div class="plan-card selected" id="planMonthly" onclick="selectPlan('monthly')">
-        <div class="plan-price">₹499</div>
-        <div class="plan-period">per month</div>
-      </div>
-      <div class="plan-card" id="planAnnual" onclick="selectPlan('annual')">
-        <div class="plan-price">₹4,990</div>
-        <div class="plan-period">per year</div>
-        <div class="plan-save">Save ₹1,000</div>
+    <div class="panel-header">
+      <span class="panel-title">Your Pipeline</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="agentCount" style="font-size:11px;font-family:var(--font-mono);color:var(--muted)">0 agents</span>
+        <button class="btn-clear" onclick="clearPipeline()">Clear</button>
       </div>
     </div>
 
-    <div class="feature-list">
-      <div class="feature-item">Unlimited pipeline runs per day</div>
-      <div class="feature-item">Unlimited agents per pipeline</div>
-      <div class="feature-item">Save &amp; reuse pipelines</div>
-      <div class="feature-item">Full memory history</div>
-      <div class="feature-item">Priority processing speed</div>
-      <div class="feature-item">REST API — higher rate limits</div>
+    <!-- Templates link -->
+    <div class="templates-strip">
+      <span class="templates-strip-label">Start from a template?</span>
+      <a class="templates-strip-link" href="/dashboard/templates.html">📋 Browse Templates →</a>
     </div>
 
-    <button class="modal-cta" id="modalCta" onclick="startCheckout()">Get Pro — ₹499/month</button>
-    <div class="modal-note">Secure payment · Cancel anytime · Instant access</div>
+    <!-- Form -->
+    <div class="agent-form">
+      <div class="section-label">Add Agent</div>
+
+      <div class="form-row-2">
+        <div class="form-row">
+          <label class="form-label">Agent Name</label>
+          <input class="form-input" id="agentName" placeholder="e.g. Researcher" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">Order</label>
+          <input class="form-input" id="agentOrder" type="number" value="1" min="1" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Instructions (what this agent does)</label>
+        <textarea class="form-input" id="agentInstructions" placeholder="e.g. You are a research expert. Find key facts, statistics, and recent developments about the given topic."></textarea>
+      </div>
+
+      <button class="btn btn-primary" onclick="addAgent()">
+        <span>+</span> Add to Pipeline
+      </button>
+    </div>
+
+    <!-- Pipeline list -->
+    <div class="pipeline-list" id="pipelineList">
+      <div class="pipeline-empty">
+        <div class="empty-icon">🔗</div>
+        <strong style="color:var(--muted2)">No agents yet</strong>
+        <p>Add agents above or load a template.</p>
+        <a href="/dashboard/templates.html" style="color:var(--teal);font-size:12px;margin-top:8px;display:inline-block;">📋 Browse Templates →</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Run + Output -->
+  <div class="right-panel">
+
+    <div class="run-bar">
+      <input class="goal-input" id="goalInput" placeholder="Enter your goal… e.g. Write a blog post about the future of renewable energy" />
+      <button class="btn-run" id="runBtn" onclick="runPipeline()">▶ Run Pipeline</button>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+
+    <div class="output-area">
+      <div class="output-main" id="outputMain">
+        <div class="output-placeholder" id="outputPlaceholder">
+          <div class="big-icon">⚡</div>
+          <p>Build your pipeline, then run it</p>
+          <small>Each agent's output feeds into the next</small>
+        </div>
+      </div>
+
+      <div class="live-feed" id="liveFeed">
+        <div class="feed-header">
+          <div class="feed-dot"></div>
+          Live Feed
+        </div>
+        <div class="feed-line">
+          <span class="feed-time">--:--:--</span>
+          <span class="feed-msg">AgentOS Pipeline Builder ready</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- ══════════════ TOAST ══════════════ -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── Theme ────────────────────────────────────────────
-const saved = localStorage.getItem('agentos_theme') || 'light';
-document.documentElement.setAttribute('data-theme', saved);
-document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀' : '🌙';
+  // ── CRITICAL: Point ALL API calls to the live Railway backend ──
+  const API = 'https://agentos-production-5783.up.railway.app';
 
-function toggleTheme() {
-  const curr = document.documentElement.getAttribute('data-theme');
-  const next = curr === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('agentos_theme', next);
-  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀' : '🌙';
-}
+  let agents = [];
+  let isRunning = false;
 
-// ─── Toast ────────────────────────────────────────────
-function toast(msg, dur=2200) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), dur);
-}
-
-// ─── Config ───────────────────────────────────────────
-const BASE = window.location.origin;
-const WS_URL = BASE.replace(/^http/, 'ws') + '/ws/live';
-const FREE_RUNS = 5;
-const FREE_MAX_AGENTS = 3;
-
-// ─── Runs ─────────────────────────────────────────────
-function todayKey() { return 'runs_' + new Date().toISOString().slice(0,10); }
-function runsUsed() { return parseInt(localStorage.getItem(todayKey()) || '0'); }
-function isPro()    { return localStorage.getItem('agentos_pro') === 'true'; }
-function bumpRun()  { localStorage.setItem(todayKey(), runsUsed()+1); renderRuns(); }
-function renderRuns() {
-  const bar = document.getElementById('runsBar');
-  const lbl = document.getElementById('runsLabel');
-  if (isPro()) { bar.style.width='100%'; bar.className='runs-bar'; lbl.textContent='Pro · unlimited runs'; return; }
-  const used = runsUsed();
-  const left = Math.max(0, FREE_RUNS - used);
-  const pct  = (left/FREE_RUNS)*100;
-  bar.style.width = pct + '%';
-  bar.className = 'runs-bar' + (left<=1?' danger':left<=2?' warn':'');
-  lbl.textContent = left + ' free run' + (left!==1?'s':'') + ' left today';
-}
-
-// ─── WebSocket ────────────────────────────────────────
-let ws;
-function connectWS() {
-  const dot = document.getElementById('wsDot');
-  const lbl = document.getElementById('wsLabel');
-  try {
-    ws = new WebSocket(WS_URL);
-    ws.onopen    = () => { dot.className='ws-dot on'; lbl.textContent='Live'; feedLog('system','Connected'); };
-    ws.onmessage = e  => { try { handleMsg(JSON.parse(e.data)); } catch { feedLog('system', e.data); } };
-    ws.onclose   = () => { dot.className='ws-dot err'; lbl.textContent='Reconnecting'; setTimeout(connectWS,3000); };
-    ws.onerror   = () => { dot.className='ws-dot err'; lbl.textContent='Error'; };
-  } catch(e) { lbl.textContent='WS unavailable'; }
-}
-function handleMsg(msg) {
-  if (msg.type==='agent_update') {
-    feedLog(msg.agent||'agent', msg.message||JSON.stringify(msg));
-    if (msg.status==='complete' && msg.output) { addStep(msg.agent, msg.output); setOutput(msg.output); }
-  } else if (msg.type==='task_complete') {
-    feedLog('system','✓ Complete');
-    if (msg.output) setOutput(msg.output);
-    setRunning(false);
-  } else { feedLog('system', JSON.stringify(msg)); }
-}
-
-// ─── Feed ─────────────────────────────────────────────
-function feedLog(agent, message) {
-  const feed = document.getElementById('liveFeed');
-  const now  = new Date().toLocaleTimeString('en-GB');
-  const div  = document.createElement('div');
-  div.className = 'feed-line';
-  const isOk  = /✓|complete|success/i.test(message);
-  const isErr = /error|fail/i.test(message);
-  div.innerHTML =
-    `<span class="feed-ts">${now}</span>` +
-    (agent!=='system' ? `<span class="feed-agent">[${esc(agent)}]</span>` : '') +
-    `<span class="feed-msg ${isOk?'ok':isErr?'err':''}">${esc(message)}</span>`;
-  feed.appendChild(div);
-  feed.scrollTop = feed.scrollHeight;
-}
-function clearFeed() { document.getElementById('liveFeed').innerHTML=''; feedLog('system','Feed cleared'); }
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ─── Templates ────────────────────────────────────────
-const TPLS = {
-  content: {
-    agents:[
-      {name:'Researcher',    instructions:'You are a thorough researcher. Given a topic, gather key facts, context, statistics, and examples. Output a structured brief.'},
-      {name:'Writer',        instructions:'You are a skilled content writer. Using the research, write a compelling, engaging piece. Match the tone to the intended audience.'},
-      {name:'Editor',        instructions:'You are a professional editor. Review the draft for clarity, grammar, flow, and impact. Output the polished final version.'},
-      {name:'SEO Optimizer', instructions:'You are an SEO expert. Suggest a title, meta description, 5 target keywords, and any improvements for search visibility.'},
-    ],
-    goal:'Write a 600-word blog post about the future of AI agents for a technical startup audience.'
-  },
-  code: {
-    agents:[
-      {name:'Bug Finder',       instructions:'You are an expert code reviewer. Analyze the code for bugs, logic errors, and edge cases. List each issue clearly.'},
-      {name:'Security Auditor', instructions:'You are a security expert. Identify vulnerabilities — injection, auth issues, data exposure. Rate severity: HIGH / MED / LOW.'},
-      {name:'Fix Report',       instructions:'Combine the findings into a clear report: 1) executive summary, 2) prioritized issues, 3) suggested fixes with code snippets.'},
-    ],
-    goal:"Review this code for bugs and security issues:\n\ndef get_user(db, user_id):\n    query = f\"SELECT * FROM users WHERE id = {user_id}\"\n    return db.execute(query)"
-  },
-  research: {
-    agents:[
-      {name:'Researcher',   instructions:'You are a deep researcher. Investigate the topic comprehensively — key facts, data, expert opinions, recent developments.'},
-      {name:'Fact Checker', instructions:'You are a rigorous fact checker. Critically review the research. Flag unsupported claims, gaps, and potential inaccuracies.'},
-      {name:'Summarizer',   instructions:'Synthesize the research into a clear 3-paragraph executive summary with 5 bullet-point key takeaways.'},
-    ],
-    goal:'Research the current state of multi-agent AI systems and their real-world business applications in 2025–2026.'
-  },
-  email: {
-    agents:[
-      {name:'Drafter',      instructions:'Write a first draft of the email. Focus on the core message and call to action.'},
-      {name:'Tone Refiner', instructions:'Review the draft. Make it professional yet warm. Remove jargon. Tighten every sentence.'},
-      {name:'Final Polish', instructions:'Final pass: fix grammar, sharpen the subject line, confirm the CTA is clear. Output the email ready to send.'},
-    ],
-    goal:"Write a cold email to a potential investor introducing AgentOS — a no-code multi-agent AI pipeline builder — and requesting a 20-minute call."
+  // ── API key helpers ─────────────────────────────────────────
+  function getApiKey() {
+    return document.getElementById('apiKeyInput').value.trim() ||
+           localStorage.getItem('agentos_api_key') || '';
   }
-};
 
-function loadTpl(key) {
-  const t = TPLS[key];
-  if (!t) return;
-  if (pipeline.length && !confirm('Replace current pipeline with this template?')) return;
-  pipeline = t.agents.map((a,i) => ({...a, order:i+1}));
-  if (t.goal) document.getElementById('pipelineGoal').value = t.goal;
-  savePipeline(); renderPipeline();
-  feedLog('system', `Template "${key}" loaded`);
-  toast('Template loaded ✓');
-}
+  document.getElementById('apiKeyInput').addEventListener('change', e => {
+    localStorage.setItem('agentos_api_key', e.target.value.trim());
+  });
 
-// ─── Pipeline ─────────────────────────────────────────
-let pipeline = [];
-function savePipeline() { try { localStorage.setItem('agentos_pipeline', JSON.stringify(pipeline)); } catch{} }
-function loadPipeline() {
-  try {
-    const s = localStorage.getItem('agentos_pipeline');
-    if (s) { pipeline = JSON.parse(s); renderPipeline(); feedLog('system','Pipeline restored'); }
-  } catch{}
-}
+  // ── Load on start ───────────────────────────────────────────
+  window.addEventListener('load', () => {
+    const savedKey = localStorage.getItem('agentos_api_key') ||
+                     localStorage.getItem('agos_api_key') || '';
+    if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
 
-function addAgent() {
-  const name  = document.getElementById('agentName').value.trim();
-  const instr = document.getElementById('agentInstr').value.trim();
-  if (!name) { toast('Agent name required'); return; }
-  if (!isPro() && pipeline.length >= FREE_MAX_AGENTS) {
-    if (confirm('Free plan: 3 agents max. Upgrade to Pro for unlimited?')) openPro();
-    return;
+    // Check for template passed via localStorage (from other pages)
+    const savedTemplate = localStorage.getItem('agos_template');
+    if (savedTemplate) {
+      try {
+        const template = JSON.parse(savedTemplate);
+        localStorage.removeItem('agos_template');
+        agents = template.agents.map(a => ({
+          id: 'local_' + Math.random().toString(36).substr(2, 9),
+          name: a.name,
+          instructions: a.instructions,
+          agent_order: a.order
+        }));
+        agents.sort((a, b) => a.agent_order - b.agent_order);
+        renderPipeline(template.name);
+        showToast('Template loaded: ' + template.name, 'success');
+        addFeed('📋 Template loaded: ' + template.name, 'info');
+      } catch(e) { console.error('Template load error', e); }
+    } else {
+      loadAgents();
+    }
+  });
+
+  // ── Toast ───────────────────────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = (type === 'success' ? '✅ ' : type === 'error' ? '❌ ' : 'ℹ️ ') + msg;
+    t.className = `toast show ${type}`;
+    setTimeout(() => t.className = 'toast', 3000);
   }
-  pipeline.push({name, order:pipeline.length+1, instructions:instr});
-  document.getElementById('agentName').value  = '';
-  document.getElementById('agentInstr').value = '';
-  savePipeline(); renderPipeline();
-  toast('Agent added ✓');
-}
 
-function removeAgent(i) {
-  pipeline.splice(i,1);
-  pipeline.forEach((a,idx) => a.order = idx+1);
-  savePipeline(); renderPipeline();
-}
-function clearPipeline() {
-  if (!pipeline.length || confirm('Clear all agents?')) {
-    pipeline = []; savePipeline(); renderPipeline();
-    document.getElementById('stepsCard').style.display='none';
-    document.getElementById('stepsBody').innerHTML='';
+  // ── Feed ────────────────────────────────────────────────────
+  function addFeed(msg, type = '') {
+    const feed = document.getElementById('liveFeed');
+    const time = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'feed-line';
+    line.innerHTML = `<span class="feed-time">${time}</span><span class="feed-msg ${type}">${escapeHtml(msg)}</span>`;
+    feed.appendChild(line);
+    feed.scrollTop = feed.scrollHeight;
   }
-}
 
-function renderPipeline() {
-  document.getElementById('agentCount').textContent = '· ' + pipeline.length + ' agent'+(pipeline.length!==1?'s':'');
-  const list = document.getElementById('pipelineList');
+  function escapeHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
-  if (!pipeline.length) {
-    list.innerHTML = '<div class="empty-state" style="padding:16px"><div class="empty-icon">⚡</div><div class="empty-text">Pick a template or add agents above</div></div>';
-  } else {
-    list.innerHTML = pipeline.map((a,i) =>
-      (i ? '<div class="chip-arrow">↓</div>' : '') +
-      `<div class="agent-chip">
-        <div class="chip-num">${a.order}</div>
-        <div class="chip-body">
-          <div class="chip-name">${esc(a.name)}</div>
-          <div class="chip-instr">${esc(a.instructions||'No instructions')}</div>
+  // ── Load agents from live backend ───────────────────────────
+  async function loadAgents() {
+    const key = getApiKey();
+    if (!key) return;
+    try {
+      const r = await fetch(`${API}/pipeline/agents`, {
+        headers: { 'x-api-key': key }
+      });
+      if (!r.ok) return;
+      const data = await r.json();
+      agents = data.agents || [];
+      renderPipeline();
+      if (agents.length) addFeed(`Loaded ${agents.length} saved agent(s)`, 'info');
+    } catch(e) {
+      addFeed('Could not reach backend — check your connection');
+    }
+  }
+
+  // ── Add agent ───────────────────────────────────────────────
+  async function addAgent() {
+    const key = getApiKey();
+    if (!key) { showToast('Enter your API key first', 'error'); return; }
+
+    const name = document.getElementById('agentName').value.trim();
+    const instructions = document.getElementById('agentInstructions').value.trim();
+    const order = parseInt(document.getElementById('agentOrder').value) || agents.length + 1;
+
+    if (!name || !instructions) {
+      showToast('Name and instructions are required', 'error');
+      return;
+    }
+
+    try {
+      const r = await fetch(`${API}/pipeline/agents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+        body: JSON.stringify({ name, instructions, order })
+      });
+      if (!r.ok) throw new Error((await r.json()).detail || 'Failed');
+      const data = await r.json();
+
+      agents.push({ id: data.agent_id, name, instructions, agent_order: order });
+      agents.sort((a, b) => a.agent_order - b.agent_order);
+      renderPipeline();
+
+      document.getElementById('agentName').value = '';
+      document.getElementById('agentInstructions').value = '';
+      document.getElementById('agentOrder').value = agents.length + 1;
+
+      showToast(`${name} added to pipeline`, 'success');
+      addFeed(`Agent added: ${name}`, 'info');
+    } catch(e) {
+      showToast('Failed to add agent — ' + e.message, 'error');
+    }
+  }
+
+  // ── Delete agent ────────────────────────────────────────────
+  async function deleteAgent(agentId, name) {
+    const key = getApiKey();
+    if (agentId.startsWith('local_')) {
+      agents = agents.filter(a => a.id !== agentId);
+      renderPipeline();
+      showToast(`${name} removed`, 'info');
+      return;
+    }
+    try {
+      await fetch(`${API}/pipeline/agents/${agentId}`, {
+        method: 'DELETE',
+        headers: { 'x-api-key': key }
+      });
+      agents = agents.filter(a => a.id !== agentId);
+      renderPipeline();
+      showToast(`${name} removed`, 'info');
+      addFeed(`Agent removed: ${name}`);
+    } catch(e) {
+      showToast('Failed to delete agent', 'error');
+    }
+  }
+
+  // ── Clear pipeline ──────────────────────────────────────────
+  function clearPipeline() {
+    if (!agents.length) return;
+    if (!confirm('Clear all agents from pipeline?')) return;
+    agents = [];
+    renderPipeline();
+    showToast('Pipeline cleared', 'info');
+  }
+
+  // ── Render pipeline ─────────────────────────────────────────
+  function renderPipeline(templateName) {
+    const list = document.getElementById('pipelineList');
+    document.getElementById('agentCount').textContent = `${agents.length} agent${agents.length !== 1 ? 's' : ''}`;
+    document.getElementById('agentOrder').value = agents.length + 1;
+
+    if (!agents.length) {
+      list.innerHTML = `
+        <div class="pipeline-empty">
+          <div class="empty-icon">🔗</div>
+          <strong style="color:var(--muted2)">No agents yet</strong>
+          <p>Add agents above or pick a quick template.</p>
+        </div>`;
+      return;
+    }
+
+    let html = '';
+    if (templateName) {
+      html += `
+        <div class="template-banner">
+          <span>📋 ${escapeHtml(templateName)}</span>
+          <span style="font-size:10px;opacity:0.7">loaded</span>
+        </div>`;
+    }
+
+    html += agents.map((a, i) => `
+      ${i > 0 ? '<div class="connector">↓</div>' : ''}
+      <div class="agent-pill" id="pill-${a.id}">
+        <div class="agent-order-badge">${a.agent_order}</div>
+        <div class="agent-pill-info">
+          <div class="agent-pill-name">${escapeHtml(a.name)}</div>
+          <div class="agent-pill-role">${escapeHtml(a.instructions.substring(0, 55))}${a.instructions.length > 55 ? '…' : ''}</div>
         </div>
-        <button class="chip-del" onclick="removeAgent(${i})">×</button>
-      </div>`
-    ).join('');
+        <span class="agent-status-indicator status-idle" id="status-${a.id}">idle</span>
+        <button class="btn-danger" onclick="deleteAgent('${a.id}', '${escapeHtml(a.name)}')">✕</button>
+      </div>
+    `).join('');
+
+    list.innerHTML = html;
   }
 
-  // Flow preview
-  const flow = document.getElementById('flowWrap');
-  if (!pipeline.length) {
-    flow.innerHTML = '<span class="flow-empty">Add agents to see your pipeline here</span>';
-  } else {
-    flow.innerHTML = pipeline.map((a,i) =>
-      (i ? '<span class="flow-arrow">→</span>' : '') +
-      `<div class="flow-node">
-        <div class="flow-node-name">${esc(a.name)}</div>
-        <div class="flow-node-sub">${esc((a.instructions||'').slice(0,32))}${(a.instructions||'').length>32?'…':''}</div>
-      </div>`
-    ).join('');
-  }
-}
+  // ── Run pipeline ────────────────────────────────────────────
+  async function runPipeline() {
+    if (isRunning) return;
+    const key = getApiKey();
+    if (!key) { showToast('Enter your API key first', 'error'); return; }
 
-// ─── Run ──────────────────────────────────────────────
-async function runPipeline() {
-  const goal = document.getElementById('pipelineGoal').value.trim();
-  if (!goal)           { toast('Enter a goal first'); return; }
-  if (!pipeline.length){ toast('Add at least one agent'); return; }
-  if (!isPro() && runsUsed() >= FREE_RUNS) {
-    if (confirm("You've used all 5 free runs today. Upgrade to Pro for unlimited?")) openPro();
-    return;
+    const goal = document.getElementById('goalInput').value.trim();
+    if (!goal) { showToast('Enter a goal to run', 'error'); return; }
+    if (!agents.length) { showToast('Add at least one agent first', 'error'); return; }
+
+    isRunning = true;
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Running...';
+
+    const output = document.getElementById('outputMain');
+    output.innerHTML = '';
+    setProgress(5);
+    addFeed(`🚀 Starting pipeline: "${goal.substring(0, 50)}"`, 'info');
+    agents.forEach(a => setAgentStatus(a.id, 'idle'));
+
+    try {
+      const hasLocalAgents = agents.some(a => a.id && a.id.startsWith('local_'));
+
+      if (hasLocalAgents) {
+        // ── Template / local agents → orchestrate manually via /tasks/submit ──
+        setProgress(20);
+        addFeed(`Orchestrating ${agents.length} agents sequentially...`);
+
+        let context = goal;
+        const results = [];
+
+        for (let i = 0; i < agents.length; i++) {
+          const agent = agents[i];
+          setAgentStatus(agent.id, 'running');
+          setProgress(20 + Math.round(((i) / agents.length) * 70));
+          addFeed(`▶ Running: ${agent.name}`, 'info');
+
+          const agentPrompt = `${agent.instructions}\n\n---\nCurrent task / context:\n${context}`;
+
+          const r = await fetch(`${API}/tasks/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+            body: JSON.stringify({ goal: agentPrompt })
+          });
+
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}));
+            throw new Error(err.detail || `Agent "${agent.name}" failed (HTTP ${r.status})`);
+          }
+
+          const taskData = await r.json();
+          const agentOutput = taskData.result_preview || taskData.result || '(no output)';
+
+          // Feed this agent's output as context for the next agent
+          context = agentOutput;
+          results.push({ agent: agent.name, output: agentOutput });
+
+          setAgentStatus(agent.id, 'done');
+          addFeed(`✅ ${agent.name} done`, 'success');
+
+          // Render step card
+          const card = document.createElement('div');
+          card.className = 'step-card';
+          card.style.animationDelay = `${i * 0.05}s`;
+          card.innerHTML = `
+            <div class="step-card-header">
+              <span style="font-size:16px">${getAgentEmoji(agent.name)}</span>
+              <span class="step-agent-name">${escapeHtml(agent.name)}</span>
+              <span class="step-badge step-badge-done">✓ done</span>
+              <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
+            </div>
+            <div class="step-card-body">${escapeHtml(agentOutput)}</div>
+          `;
+          // Set copy text safely
+          card.querySelector('.copy-btn').dataset.text = agentOutput;
+          output.appendChild(card);
+          output.scrollTop = output.scrollHeight;
+        }
+
+        setProgress(100);
+
+        // Final output = last agent's output
+        const finalText = results[results.length - 1]?.output || '';
+        const final = document.createElement('div');
+        final.className = 'final-output';
+        final.innerHTML = `
+          <div class="final-output-label">
+            ⚡ Final Output
+            <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
+          </div>
+          <div class="final-output-text">${escapeHtml(finalText)}</div>
+        `;
+        final.querySelector('.copy-btn').dataset.text = finalText;
+        output.appendChild(final);
+        addFeed(`🎉 Pipeline complete! (${agents.length} agents)`, 'success');
+
+      } else {
+        // ── Backend-registered agents → use /pipeline/run ──
+        setProgress(15);
+        addFeed(`Sending to ${agents.length} backend agents...`);
+
+        const r = await fetch(`${API}/pipeline/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+          body: JSON.stringify({ goal })
+        });
+
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.detail || `Pipeline failed (HTTP ${r.status})`);
+        }
+
+        const data = await r.json();
+        setProgress(100);
+
+        (data.steps || []).forEach((step, i) => {
+          const agentObj = agents.find(a => a.name === step.agent);
+          if (agentObj) setAgentStatus(agentObj.id, 'done');
+
+          const card = document.createElement('div');
+          card.className = 'step-card';
+          card.style.animationDelay = `${i * 0.1}s`;
+          card.innerHTML = `
+            <div class="step-card-header">
+              <span style="font-size:16px">${getAgentEmoji(step.agent)}</span>
+              <span class="step-agent-name">${escapeHtml(step.agent)}</span>
+              <span class="step-badge step-badge-done">✓ done</span>
+              <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
+            </div>
+            <div class="step-card-body">${escapeHtml(step.output)}</div>
+          `;
+          card.querySelector('.copy-btn').dataset.text = step.output;
+          output.appendChild(card);
+          addFeed(`✅ ${step.agent} completed`, 'success');
+        });
+
+        if (data.final_output) {
+          const final = document.createElement('div');
+          final.className = 'final-output';
+          final.innerHTML = `
+            <div class="final-output-label">
+              ⚡ Final Output
+              <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
+            </div>
+            <div class="final-output-text">${escapeHtml(data.final_output)}</div>
+          `;
+          final.querySelector('.copy-btn').dataset.text = data.final_output;
+          output.appendChild(final);
+          addFeed(`🎉 Pipeline complete!`, 'success');
+        }
+      }
+
+    } catch(e) {
+      const errDiv = document.createElement('div');
+      errDiv.className = 'error-banner';
+      errDiv.innerHTML = `<strong>❌ Pipeline Error</strong>${escapeHtml(e.message)}`;
+      output.appendChild(errDiv);
+      showToast(e.message || 'Pipeline failed', 'error');
+      addFeed(`❌ Error: ${e.message}`);
+      agents.forEach(a => setAgentStatus(a.id, 'idle'));
+      setProgress(0);
+    }
+
+    isRunning = false;
+    btn.disabled = false;
+    btn.textContent = '▶ Run Pipeline';
   }
-  setRunning(true);
-  setOutput('Running…');
-  document.getElementById('stepsCard').style.display='none';
-  document.getElementById('stepsBody').innerHTML='';
-  feedLog('system', `Starting · ${pipeline.length} agents · "${goal.slice(0,50)}${goal.length>50?'…':''}"`);
-  try {
-    const res = await fetch(BASE + '/pipeline/run', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({goal, agents:pipeline})
+
+  // ── Helpers ─────────────────────────────────────────────────
+  function setAgentStatus(agentId, status) {
+    const pill = document.getElementById(`pill-${agentId}`);
+    const badge = document.getElementById(`status-${agentId}`);
+    if (!pill || !badge) return;
+    pill.className = `agent-pill ${status === 'running' ? 'running' : status === 'done' ? 'done' : ''}`;
+    badge.className = `agent-status-indicator status-${status}`;
+    badge.textContent = status;
+  }
+
+  function setProgress(pct) {
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  function getAgentEmoji(name) {
+    const n = (name || '').toLowerCase();
+    if (n.includes('research')) return '🔍';
+    if (n.includes('write') || n.includes('writer')) return '✍️';
+    if (n.includes('edit') || n.includes('editor')) return '🎨';
+    if (n.includes('plan') || n.includes('planner')) return '🧠';
+    if (n.includes('fact') || n.includes('check')) return '🔎';
+    if (n.includes('code') || n.includes('dev') || n.includes('security') || n.includes('bug')) return '💻';
+    if (n.includes('seo')) return '📈';
+    if (n.includes('summar') || n.includes('synthes')) return '📝';
+    if (n.includes('translat')) return '🌐';
+    if (n.includes('sales') || n.includes('email')) return '📧';
+    if (n.includes('legal') || n.includes('contract') || n.includes('risk')) return '⚖️';
+    if (n.includes('map') || n.includes('topic')) return '🗺️';
+    if (n.includes('report')) return '📊';
+    if (n.includes('fix') || n.includes('suggest')) return '🛠️';
+    return '🤖';
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied!', 'success'));
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('goalInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') runPipeline();
     });
-    if (!res.ok) throw new Error('Server error ' + res.status);
-    const data = await res.json();
-    bumpRun();
-    feedLog('system','Pipeline submitted — watching live feed…');
-    if (data.output) { setOutput(data.output); setRunning(false); }
-    if (data.steps) data.steps.forEach(s => addStep(s.agent, s.output));
-  } catch(err) {
-    feedLog('system','Error: ' + err.message);
-    setOutput('Error: ' + err.message);
-    setRunning(false);
-  }
-}
-
-function setOutput(text) {
-  const box = document.getElementById('outputBox');
-  box.textContent = text;
-  box.className   = 'output has-content';
-}
-function setRunning(v) {
-  document.getElementById('runBtn').disabled = v;
-  document.getElementById('runningRow').style.display = v ? 'flex' : 'none';
-}
-function addStep(agent, output) {
-  document.getElementById('stepsCard').style.display='block';
-  const div = document.createElement('div');
-  div.className = 'step-output';
-  div.innerHTML = `<div class="step-label">${esc(agent)}</div><div class="step-text">${esc(output)}</div>`;
-  document.getElementById('stepsBody').appendChild(div);
-}
-
-// ─── Actions ──────────────────────────────────────────
-function copyOutput() {
-  const t = document.getElementById('outputBox').textContent;
-  navigator.clipboard.writeText(t).then(() => toast('Copied to clipboard ✓'));
-}
-function downloadOutput() {
-  const t = document.getElementById('outputBox').textContent;
-  const a = document.createElement('a');
-  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(t);
-  a.download = 'agentos-output-' + Date.now() + '.txt';
-  a.click();
-}
-
-// ─── Pro ──────────────────────────────────────────────
-let selectedPlan = 'monthly';
-function openPro()  { document.getElementById('proModal').classList.add('open'); }
-function closePro() { document.getElementById('proModal').classList.remove('open'); }
-function selectPlan(plan) {
-  selectedPlan = plan;
-  document.getElementById('planMonthly').classList.toggle('selected', plan==='monthly');
-  document.getElementById('planAnnual').classList.toggle('selected', plan==='annual');
-  document.getElementById('modalCta').textContent =
-    plan==='monthly' ? 'Get Pro — ₹499/month' : 'Get Pro — ₹4,990/year';
-}
-function startCheckout() {
-  const MONTHLY = 'https://rzp.io/YOUR_MONTHLY_LINK';
-  const ANNUAL  = 'https://rzp.io/YOUR_ANNUAL_LINK';
-  const EMAIL   = 'mailto:hello@agentos.dev?subject=AgentOS Pro (' + selectedPlan + ')&body=Hi, I want to upgrade to AgentOS Pro (' + selectedPlan + '). Please send me payment details.';
-  const link = selectedPlan==='monthly' ? MONTHLY : ANNUAL;
-  window.location.href = link.includes('YOUR_') ? EMAIL : link;
-}
-
-// ─── Init ─────────────────────────────────────────────
-connectWS();
-loadPipeline();
-renderRuns();
+  });
 </script>
 </body>
 </html>

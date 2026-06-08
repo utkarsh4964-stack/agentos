@@ -4,78 +4,186 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AgentOS — Pipeline Templates</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
   :root {
-    --bg: #0A0918; --card: #14112A; --border: #2A2550;
-    --accent: #6C47FF; --teal: #00C4A1; --text: #E8E4FF;
-    --muted: #8B85B0;
+    --bg: #070810;
+    --surface: #0E1120;
+    --card: #131627;
+    --border: #1E2340;
+    --border-bright: #2E3460;
+    --accent: #4F6EF7;
+    --accent-glow: rgba(79,110,247,0.15);
+    --teal: #00E5C4;
+    --teal-glow: rgba(0,229,196,0.12);
+    --text: #E2E8FF;
+    --muted: #5A6080;
+    --muted2: #8890B0;
+    --green: #00C896;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,110,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,110,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header (matches pipeline.html exactly) ── */
   header {
-    background: var(--card); border-bottom: 1px solid var(--border);
-    padding: 16px 32px; display: flex; align-items: center;
-    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(7,8,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
-  .logo { font-size: 20px; font-weight: 800; color: white; }
-  .logo span { color: var(--accent); }
-  nav a {
-    color: var(--muted); text-decoration: none;
-    font-size: 14px; margin-left: 24px;
+
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-size: 17px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+  .logo-badge { font-size: 10px; font-family: var(--font-mono); background: var(--teal-glow); border: 1px solid var(--teal); color: var(--teal); padding: 2px 8px; border-radius: 4px; }
+
+  nav { display: flex; gap: 4px; margin-left: 24px; }
+  nav a { font-size: 13px; font-weight: 600; color: var(--muted2); text-decoration: none; padding: 6px 14px; border-radius: 6px; transition: all 0.2s; }
+  nav a:hover { color: var(--text); background: var(--card); }
+  nav a.active { color: var(--accent); background: var(--accent-glow); }
+
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .builder-btn {
+    font-size: 12px; font-weight: 700; font-family: var(--font-mono);
+    background: var(--accent); color: white;
+    border: none; padding: 7px 16px; border-radius: 7px;
+    cursor: pointer; text-decoration: none;
+    transition: filter 0.2s;
   }
-  nav a:hover { color: white; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
-  .page-title { font-size: 32px; font-weight: 800; color: white; margin-bottom: 8px; }
-  .page-sub { color: var(--muted); margin-bottom: 40px; font-size: 15px; }
-  .filter-bar { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; }
+  .builder-btn:hover { filter: brightness(1.15); }
+
+  /* ── Page body ── */
+  .container {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto; padding: 48px 24px;
+  }
+
+  .page-header { margin-bottom: 36px; }
+  .page-title { font-size: 30px; font-weight: 800; color: white; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .page-sub { color: var(--muted2); font-size: 14px; line-height: 1.6; }
+
+  /* ── Filter bar ── */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
   .filter-btn {
-    padding: 8px 18px; border-radius: 20px; font-size: 13px;
-    font-weight: 600; cursor: pointer; border: 1px solid var(--border);
-    background: var(--card); color: var(--muted); transition: all .2s;
+    padding: 6px 16px; border-radius: 20px; font-size: 12px;
+    font-weight: 700; cursor: pointer; border: 1px solid var(--border);
+    background: var(--card); color: var(--muted2);
+    font-family: var(--font-mono);
+    transition: all .2s;
   }
-  .filter-btn.active, .filter-btn:hover {
-    border-color: var(--accent); color: white; background: rgba(108,71,255,0.15);
-  }
+  .filter-btn:hover { border-color: var(--border-bright); color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+  /* ── Grid ── */
   .templates-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
   }
+
   .template-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 24px; cursor: pointer;
-    transition: all .3s; position: relative; overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
   .template-card:hover {
-    border-color: var(--accent); transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    border-color: var(--border-bright);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
   }
-  .template-card.featured { border-color: var(--teal); }
-  .template-icon { font-size: 32px; margin-bottom: 14px; }
+  .template-card.featured { border-color: rgba(79,110,247,0.4); }
+  .template-card.featured:hover { border-color: var(--accent); }
+
+  .popular-badge {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--teal); color: #070810;
+    font-size: 9px; font-weight: 700; padding: 3px 8px;
+    border-radius: 20px; text-transform: uppercase;
+    font-family: var(--font-mono); letter-spacing: 0.5px;
+  }
+
+  .template-icon { font-size: 28px; margin-bottom: 12px; }
+
   .template-category {
     font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1px; color: var(--accent); margin-bottom: 8px;
+    letter-spacing: 1.5px; color: var(--accent);
+    margin-bottom: 6px; font-family: var(--font-mono);
   }
   .template-category.teal { color: var(--teal); }
-  .template-name { font-size: 17px; font-weight: 700; color: white; margin-bottom: 8px; }
-  .template-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
-  .template-agents { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .template-category.green { color: var(--green); }
+
+  .template-name { font-size: 16px; font-weight: 800; color: white; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .template-desc { font-size: 12px; color: var(--muted2); line-height: 1.65; margin-bottom: 16px; flex: 1; }
+
+  .template-agents { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 16px; }
   .agent-tag {
-    font-size: 11px; padding: 3px 10px; border-radius: 6px;
-    background: rgba(108,71,255,0.1); border: 1px solid rgba(108,71,255,0.3);
-    color: #A78BFA; font-family: monospace;
+    font-size: 10px; padding: 3px 9px; border-radius: 5px;
+    background: var(--accent-glow); border: 1px solid rgba(79,110,247,0.25);
+    color: #A0B4FF; font-family: var(--font-mono);
   }
+
   .use-btn {
     width: 100%; padding: 10px; border-radius: 8px;
     background: var(--accent); color: white; border: none;
-    font-size: 14px; font-weight: 700; cursor: pointer;
-    transition: opacity .2s;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: var(--font-display);
+    transition: filter 0.2s, transform 0.2s;
+    margin-top: auto;
   }
-  .use-btn:hover { opacity: .85; }
-  .popular-badge {
-    position: absolute; top: 16px; right: 16px;
-    background: var(--teal); color: #0A0918;
-    font-size: 10px; font-weight: 700; padding: 3px 8px;
-    border-radius: 20px; text-transform: uppercase;
+  .use-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .use-btn:active { transform: translateY(0); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--card); border: 1px solid var(--green);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 13px; color: var(--text); z-index: 999;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s; font-family: var(--font-mono);
   }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+
   @media (max-width: 900px) { .templates-grid { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 600px) { .templates-grid { grid-template-columns: 1fr; } }
 </style>
@@ -83,24 +191,33 @@
 <body>
 
 <header>
-  <div class="logo">🤖 Agent<span>OS</span></div>
+  <a class="logo" href="/">
+    <div class="logo-icon">🤖</div>
+    <span class="logo-text">AgentOS</span>
+  </a>
+  <span class="logo-badge">TEMPLATES</span>
   <nav>
-    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
     <a href="/pipeline">Builder</a>
-    <a href="/templates">Templates</a>
-    <a href="/docs">API</a>
+    <a href="/templates" class="active">Templates</a>
+    <a href="/docs" target="_blank">API Docs</a>
   </nav>
+  <div class="header-right">
+    <a class="builder-btn" href="/pipeline">▶ Open Builder</a>
+  </div>
 </header>
 
 <div class="container">
-  <div class="page-title">Pipeline Templates</div>
-  <div class="page-sub">
-    Start with a pre-built pipeline. Customize it. Run it instantly.
-    <br>Click "Use Template" to load it into the Pipeline Builder.
+  <div class="page-header">
+    <div class="page-title">Pipeline Templates</div>
+    <div class="page-sub">
+      Start with a pre-built pipeline. Customize it. Run it instantly.<br>
+      Click "Use Template" to load it into the Pipeline Builder.
+    </div>
   </div>
 
   <div class="filter-bar">
-    <button class="filter-btn active" onclick="filter('all', this)">All Templates</button>
+    <button class="filter-btn active" onclick="filter('all', this)">All</button>
     <button class="filter-btn" onclick="filter('content', this)">Content</button>
     <button class="filter-btn" onclick="filter('code', this)">Code</button>
     <button class="filter-btn" onclick="filter('research', this)">Research</button>
@@ -111,6 +228,8 @@
   <div class="templates-grid" id="templatesGrid"></div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
 const templates = [
   {
@@ -118,14 +237,15 @@ const templates = [
     icon: "📝",
     category: "content",
     categoryLabel: "Content",
+    categoryClass: "teal",
     name: "SEO Blog Writer",
     desc: "Research a topic, write a full blog post, optimize for SEO, and polish the final draft.",
     popular: true,
     agents: [
-      { name: "Researcher", instructions: "Research the given topic thoroughly. Find key facts, statistics, recent developments, and interesting angles. Be comprehensive.", order: 1 },
-      { name: "Writer", instructions: "Write a detailed, engaging blog post based on the research provided. Use clear headings, examples, and a conversational tone.", order: 2 },
+      { name: "Researcher",    instructions: "Research the given topic thoroughly. Find key facts, statistics, recent developments, and interesting angles. Be comprehensive.", order: 1 },
+      { name: "Writer",        instructions: "Write a detailed, engaging blog post based on the research provided. Use clear headings, examples, and a conversational tone.", order: 2 },
       { name: "SEO Optimizer", instructions: "Optimize the blog post for SEO. Suggest a title, meta description, improve keyword usage, and add internal link suggestions.", order: 3 },
-      { name: "Editor", instructions: "Polish the final blog post. Fix grammar, improve flow, ensure consistent tone, and make it publication ready.", order: 4 }
+      { name: "Editor",        instructions: "Polish the final blog post. Fix grammar, improve flow, ensure consistent tone, and make it publication ready.", order: 4 }
     ]
   },
   {
@@ -133,13 +253,14 @@ const templates = [
     icon: "🔐",
     category: "code",
     categoryLabel: "Code",
+    categoryClass: "",
     name: "Security Code Review",
     desc: "Scan code for vulnerabilities, suggest fixes, and generate a professional security report.",
     popular: true,
     agents: [
       { name: "SecurityAnalyzer", instructions: "Analyze the provided code for security vulnerabilities including SQL injection, XSS, authentication issues, and data exposure risks.", order: 1 },
-      { name: "FixSuggester", instructions: "For each vulnerability found, provide specific code fixes with examples. Explain why each fix is necessary.", order: 2 },
-      { name: "ReportWriter", instructions: "Write a professional security audit report summarizing all vulnerabilities found, their severity, and the recommended fixes.", order: 3 }
+      { name: "FixSuggester",     instructions: "For each vulnerability found, provide specific code fixes with examples. Explain why each fix is necessary.", order: 2 },
+      { name: "ReportWriter",     instructions: "Write a professional security audit report summarizing all vulnerabilities found, their severity, and the recommended fixes.", order: 3 }
     ]
   },
   {
@@ -147,14 +268,15 @@ const templates = [
     icon: "📊",
     category: "research",
     categoryLabel: "Research",
+    categoryClass: "green",
     name: "Market Research Report",
     desc: "Research a market or industry, analyze competitors, and produce a comprehensive market report.",
     popular: false,
     agents: [
-      { name: "MarketResearcher", instructions: "Research the given market or industry. Find market size, growth trends, key players, and recent developments.", order: 1 },
-      { name: "CompetitorAnalyzer", instructions: "Identify and analyze the top 5 competitors in this market. Compare their strengths, weaknesses, pricing, and positioning.", order: 2 },
-      { name: "StrategyWriter", instructions: "Based on the research and competitor analysis, write strategic recommendations and opportunities for entering or growing in this market.", order: 3 },
-      { name: "ReportFormatter", instructions: "Format everything into a clean, professional market research report with an executive summary, key findings, and recommendations.", order: 4 }
+      { name: "MarketResearcher",  instructions: "Research the given market or industry. Find market size, growth trends, key players, and recent developments.", order: 1 },
+      { name: "CompetitorAnalyzer",instructions: "Identify and analyze the top 5 competitors in this market. Compare their strengths, weaknesses, pricing, and positioning.", order: 2 },
+      { name: "StrategyWriter",    instructions: "Based on the research and competitor analysis, write strategic recommendations and opportunities for entering or growing in this market.", order: 3 },
+      { name: "ReportFormatter",   instructions: "Format everything into a clean, professional market research report with an executive summary, key findings, and recommendations.", order: 4 }
     ]
   },
   {
@@ -162,13 +284,14 @@ const templates = [
     icon: "📧",
     category: "business",
     categoryLabel: "Business",
+    categoryClass: "",
     name: "Personalized Sales Email",
     desc: "Research a prospect, write a personalized outreach email, and review it for maximum impact.",
     popular: true,
     agents: [
       { name: "ProspectResearcher", instructions: "Research the prospect or company mentioned. Find their recent news, challenges, goals, and what they care about.", order: 1 },
-      { name: "EmailWriter", instructions: "Write a personalized, compelling sales email based on the prospect research. Be concise, specific, and focus on their pain points.", order: 2 },
-      { name: "EmailReviewer", instructions: "Review the sales email. Check tone, clarity, personalization quality, and suggest improvements to increase response rate.", order: 3 }
+      { name: "EmailWriter",        instructions: "Write a personalized, compelling sales email based on the prospect research. Be concise, specific, and focus on their pain points.", order: 2 },
+      { name: "EmailReviewer",      instructions: "Review the sales email. Check tone, clarity, personalization quality, and suggest improvements to increase response rate.", order: 3 }
     ]
   },
   {
@@ -176,12 +299,13 @@ const templates = [
     icon: "⚖️",
     category: "legal",
     categoryLabel: "Legal",
+    categoryClass: "",
     name: "Contract Analyzer",
     desc: "Extract key clauses, identify risks, and summarize any contract in plain English.",
     popular: false,
     agents: [
-      { name: "ClauseExtractor", instructions: "Extract all key clauses from the provided contract. Focus on payment terms, termination, liability, IP ownership, and confidentiality.", order: 1 },
-      { name: "RiskAnalyzer", instructions: "Identify potential risks, unfavorable terms, and red flags in the contract. Rate each risk as High, Medium, or Low.", order: 2 },
+      { name: "ClauseExtractor",    instructions: "Extract all key clauses from the provided contract. Focus on payment terms, termination, liability, IP ownership, and confidentiality.", order: 1 },
+      { name: "RiskAnalyzer",       instructions: "Identify potential risks, unfavorable terms, and red flags in the contract. Rate each risk as High, Medium, or Low.", order: 2 },
       { name: "PlainEnglishWriter", instructions: "Rewrite the contract summary in simple plain English that a non-lawyer can understand. Highlight the most important points.", order: 3 }
     ]
   },
@@ -190,12 +314,13 @@ const templates = [
     icon: "🎬",
     category: "content",
     categoryLabel: "Content",
+    categoryClass: "teal",
     name: "YouTube Script Writer",
     desc: "Research a topic, write an engaging YouTube script with hooks, and create a description.",
     popular: false,
     agents: [
-      { name: "TopicResearcher", instructions: "Research the given YouTube topic. Find interesting angles, surprising facts, common questions, and what performs well in this niche.", order: 1 },
-      { name: "ScriptWriter", instructions: "Write a compelling YouTube script with a strong hook in the first 30 seconds, clear structure, engaging storytelling, and a strong CTA.", order: 2 },
+      { name: "TopicResearcher",   instructions: "Research the given YouTube topic. Find interesting angles, surprising facts, common questions, and what performs well in this niche.", order: 1 },
+      { name: "ScriptWriter",      instructions: "Write a compelling YouTube script with a strong hook in the first 30 seconds, clear structure, engaging storytelling, and a strong CTA.", order: 2 },
       { name: "DescriptionWriter", instructions: "Write an SEO-optimized YouTube description, suggest timestamps, hashtags, and tags for the video.", order: 3 }
     ]
   },
@@ -204,14 +329,15 @@ const templates = [
     icon: "🚀",
     category: "business",
     categoryLabel: "Business",
+    categoryClass: "",
     name: "Startup Idea Validator",
     desc: "Analyze a startup idea for market fit, competition, risks, and provide an honest assessment.",
     popular: false,
     agents: [
-      { name: "MarketValidator", instructions: "Analyze the startup idea for market demand. Is there a real problem? How big is the market? Who are the target customers?", order: 1 },
-      { name: "CompetitionAnalyzer", instructions: "Research existing competitors and alternatives. What is the competitive landscape? What is the differentiation?", order: 2 },
-      { name: "RiskAssessor", instructions: "Identify the top risks for this startup idea. Consider market, technical, regulatory, and execution risks.", order: 3 },
-      { name: "VerdictWriter", instructions: "Give an honest overall assessment of the startup idea. Rate it 1-10, explain the rating, and suggest the most important next steps.", order: 4 }
+      { name: "MarketValidator",    instructions: "Analyze the startup idea for market demand. Is there a real problem? How big is the market? Who are the target customers?", order: 1 },
+      { name: "CompetitionAnalyzer",instructions: "Research existing competitors and alternatives. What is the competitive landscape? What is the differentiation?", order: 2 },
+      { name: "RiskAssessor",       instructions: "Identify the top risks for this startup idea. Consider market, technical, regulatory, and execution risks.", order: 3 },
+      { name: "VerdictWriter",      instructions: "Give an honest overall assessment of the startup idea. Rate it 1-10, explain the rating, and suggest the most important next steps.", order: 4 }
     ]
   },
   {
@@ -219,11 +345,12 @@ const templates = [
     icon: "📄",
     category: "business",
     categoryLabel: "Business",
+    categoryClass: "",
     name: "Resume Reviewer",
     desc: "Review a resume for ATS optimization, impact, clarity, and provide actionable improvements.",
     popular: false,
     agents: [
-      { name: "ATSAnalyzer", instructions: "Analyze the resume for ATS compatibility. Check formatting, keywords, and structure for applicant tracking systems.", order: 1 },
+      { name: "ATSAnalyzer",    instructions: "Analyze the resume for ATS compatibility. Check formatting, keywords, and structure for applicant tracking systems.", order: 1 },
       { name: "ImpactReviewer", instructions: "Review the impact and strength of achievements. Identify weak bullet points and suggest stronger, quantified alternatives.", order: 2 },
       { name: "FeedbackWriter", instructions: "Write comprehensive resume feedback with specific, actionable improvements prioritized by importance.", order: 3 }
     ]
@@ -233,13 +360,14 @@ const templates = [
     icon: "🛍️",
     category: "content",
     categoryLabel: "Content",
+    categoryClass: "teal",
     name: "Product Description Writer",
     desc: "Research similar products, write compelling descriptions, and optimize for conversions.",
     popular: false,
     agents: [
-      { name: "ProductResearcher", instructions: "Research the product category and similar products. Find what language customers use, key benefits they care about, and objections.", order: 1 },
-      { name: "CopyWriter", instructions: "Write a compelling product description that highlights benefits over features, uses emotional language, and drives conversions.", order: 2 },
-      { name: "ConversionOptimizer", instructions: "Optimize the product description for conversions. Add social proof suggestions, urgency elements, and a strong CTA.", order: 3 }
+      { name: "ProductResearcher",    instructions: "Research the product category and similar products. Find what language customers use, key benefits they care about, and objections.", order: 1 },
+      { name: "CopyWriter",           instructions: "Write a compelling product description that highlights benefits over features, uses emotional language, and drives conversions.", order: 2 },
+      { name: "ConversionOptimizer",  instructions: "Optimize the product description for conversions. Add social proof suggestions, urgency elements, and a strong CTA.", order: 3 }
     ]
   }
 ];
@@ -263,14 +391,14 @@ function renderTemplates() {
     <div class="template-card ${t.popular ? 'featured' : ''}">
       ${t.popular ? '<div class="popular-badge">Popular</div>' : ''}
       <div class="template-icon">${t.icon}</div>
-      <div class="template-category ${t.category === 'content' ? 'teal' : ''}">${t.categoryLabel}</div>
+      <div class="template-category ${t.categoryClass || ''}">${t.categoryLabel}</div>
       <div class="template-name">${t.name}</div>
       <div class="template-desc">${t.desc}</div>
       <div class="template-agents">
         ${t.agents.map(a => `<span class="agent-tag">${a.name}</span>`).join('')}
       </div>
       <button class="use-btn" onclick="useTemplate('${t.id}')">
-        Use This Template →
+        Use Template →
       </button>
     </div>
   `).join('');
@@ -280,7 +408,12 @@ function useTemplate(id) {
   const template = templates.find(t => t.id === id);
   if (!template) return;
   localStorage.setItem('agos_template', JSON.stringify(template));
-  window.location.href = '/pipeline';
+
+  // Show toast then redirect
+  const toast = document.getElementById('toast');
+  toast.textContent = '✅ Loading "' + template.name + '" into Builder...';
+  toast.classList.add('show');
+  setTimeout(() => { window.location.href = '/pipeline'; }, 800);
 }
 
 renderTemplates();
