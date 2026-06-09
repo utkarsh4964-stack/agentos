@@ -577,79 +577,94 @@
       const hasLocalAgents = agents.some(a => a.id && a.id.startsWith('local_'));
 
       if (hasLocalAgents) {
-        // ── Template / local agents → orchestrate manually via /tasks/submit ──
-        setProgress(20);
-        addFeed(`Orchestrating ${agents.length} agents sequentially...`);
+  // Save local agents to backend first, then run pipeline
+  setProgress(10);
+  addFeed(`Saving ${agents.length} agents to backend...`);
+  
+  // Delete existing backend agents first
+  const existingR = await fetch(`${API}/pipeline/agents`, {
+    headers: { 'x-api-key': key }
+  });
+  const existingData = await existingR.json();
+  for (const a of (existingData.agents || [])) {
+    await fetch(`${API}/pipeline/agents/${a.id}`, {
+      method: 'DELETE',
+      headers: { 'x-api-key': key }
+    });
+  }
 
-        let context = goal;
-        const results = [];
+  // Save current local agents to backend
+  for (const agent of agents) {
+    await fetch(`${API}/pipeline/agents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+      body: JSON.stringify({
+        name: agent.name,
+        instructions: agent.instructions,
+        order: agent.agent_order
+      })
+    });
+  }
 
-        for (let i = 0; i < agents.length; i++) {
-          const agent = agents[i];
-          setAgentStatus(agent.id, 'running');
-          setProgress(20 + Math.round(((i) / agents.length) * 70));
-          addFeed(`▶ Running: ${agent.name}`, 'info');
+  setProgress(20);
+  addFeed(`Orchestrating ${agents.length} agents sequentially...`);
 
-          const agentPrompt = `${agent.instructions}\n\n---\nCurrent task / context:\n${context}`;
+  // Now run via /pipeline/run
+  const r = await fetch(`${API}/pipeline/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+    body: JSON.stringify({ goal })
+  });
 
-          const r = await fetch(`${API}/tasks/submit`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': key },
-            body: JSON.stringify({ goal: agentPrompt })
-          });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.detail || `Pipeline failed (HTTP ${r.status})`);
+  }
 
-          if (!r.ok) {
-            const err = await r.json().catch(() => ({}));
-            throw new Error(err.detail || `Agent "${agent.name}" failed (HTTP ${r.status})`);
-          }
+  const data = await r.json();
+  setProgress(100);
 
-          const taskData = await r.json();
-          const agentOutput = taskData.result_preview || taskData.result || '(no output)';
+  (data.steps || []).forEach((step, i) => {
+    const agentObj = agents.find(a => a.name === step.agent);
+    if (agentObj) setAgentStatus(agentObj.id, 'done');
+    addFeed(`✅ ${step.agent} done`, 'success');
 
-          // Feed this agent's output as context for the next agent
-          context = agentOutput;
-          results.push({ agent: agent.name, output: agentOutput });
+    const card = document.createElement('div');
+    card.className = 'step-card';
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.innerHTML = `
+      <div class="step-card-header">
+        <span style="font-size:16px">${getAgentEmoji(step.agent)}</span>
+        <span class="step-agent-name">${escapeHtml(step.agent)}</span>
+        <span class="step-badge step-badge-done">✓ done</span>
+        <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
+      </div>
+      <div class="step-card-body">${escapeHtml(step.output)}</div>
+    `;
+    card.querySelector('.copy-btn').dataset.text = step.output;
+    output.appendChild(card);
+    output.scrollTop = output.scrollHeight;
+  });
 
-          setAgentStatus(agent.id, 'done');
-          addFeed(`✅ ${agent.name} done`, 'success');
+  const finalText = data.final_output || data.final_result || '';
+  if (finalText) {
+    const final = document.createElement('div');
+    final.className = 'final-output';
+    final.innerHTML = `
+      <div class="final-output-label">
+        ⚡ Final Output
+        <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
+      </div>
+      <div class="final-output-text">${escapeHtml(finalText)}</div>
+    `;
+    final.querySelector('.copy-btn').dataset.text = finalText;
+    output.appendChild(final);
+  }
 
-          // Render step card
-          const card = document.createElement('div');
-          card.className = 'step-card';
-          card.style.animationDelay = `${i * 0.05}s`;
-          card.innerHTML = `
-            <div class="step-card-header">
-              <span style="font-size:16px">${getAgentEmoji(agent.name)}</span>
-              <span class="step-agent-name">${escapeHtml(agent.name)}</span>
-              <span class="step-badge step-badge-done">✓ done</span>
-              <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
-            </div>
-            <div class="step-card-body">${escapeHtml(agentOutput)}</div>
-          `;
-          // Set copy text safely
-          card.querySelector('.copy-btn').dataset.text = agentOutput;
-          output.appendChild(card);
-          output.scrollTop = output.scrollHeight;
-        }
+  addFeed(`🎉 Pipeline complete! (${agents.length} agents)`, 'success');
 
-        setProgress(100);
-
-        // Final output = last agent's output
-        const finalText = results[results.length - 1]?.output || '';
-        const final = document.createElement('div');
-        final.className = 'final-output';
-        final.innerHTML = `
-          <div class="final-output-label">
-            ⚡ Final Output
-            <button class="copy-btn" onclick="copyText(this.dataset.text)" data-text="">copy</button>
-          </div>
-          <div class="final-output-text">${escapeHtml(finalText)}</div>
-        `;
-        final.querySelector('.copy-btn').dataset.text = finalText;
-        output.appendChild(final);
-        addFeed(`🎉 Pipeline complete! (${agents.length} agents)`, 'success');
-
-      } else {
+} else {
+    
         // ── Backend-registered agents → use /pipeline/run ──
         setProgress(15);
         addFeed(`Sending to ${agents.length} backend agents...`);
